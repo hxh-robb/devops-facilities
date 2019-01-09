@@ -13,7 +13,7 @@ Following are the tools in my toolbox to achieve the goal for now:
 * OpenLDAP
 * GitLab
 * Jenkins
-* Workbench
+* "Workbench" project
 
 ## The process flow
 

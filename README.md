@@ -10,8 +10,6 @@ Sadly, most of my colleagues don't have much experience in both development and 
 
 Following are the tools in my toolbox to achieve the goal for now:
 * Docker/Docker Compose
-* OpenLDAP
-* GitLab
 * Jenkins
 * "Workbench" project
 

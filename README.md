@@ -1,6 +1,6 @@
 # DevOps Facilities 
 
-There's a opinion:[Microservices and DevOps: Better together](https://www.mulesoft.com/resources/api/microservices-devops-better-together), and I agree with that.
+There's an opinion:[Microservices and DevOps: Better together](https://www.mulesoft.com/resources/api/microservices-devops-better-together), and I agree with that.
 
 As a developer in a start-up team, I deeply believe that without DevOps one can never drive the microservices application effectively.
 

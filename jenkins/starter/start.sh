@@ -24,7 +24,7 @@ Host *
 EOT
 
 test ! -d .docker && (test -n "$(ls init.tar.gz* 2>/dev/null)" && cat init.tar.gz* | tar -xz -f -)
-test -d .docker && (test -n "$(ls jobs.tar.gz* 2>/dev/null)" && cat jobs.tar.gz* | tar -xz -f -)
+#test -d .docker && (test -n "$(ls jobs.tar.gz* 2>/dev/null)" && cat jobs.tar.gz* | tar -xz -f -)
 
 #  -v "$(pwd)/jenkins.id_rsa:/root/.ssh/id_rsa" \
 #  -v "$(pwd)/ssh.config:/root/.ssh/config" \

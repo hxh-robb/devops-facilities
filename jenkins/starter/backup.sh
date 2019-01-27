@@ -13,13 +13,14 @@ test $(docker ps -f name="jenkins-with-docker_*"|wc -l) -ge 2 && NEED_START=true
 
 test "$NEED_START" == "true" && test -x stop.sh && ./stop.sh
 
-TIMESTAMP="$(date -u +%Y%m%d%H%M%S)"
-BACKUP_FILE=$(test "$JOB_ONLY" == "true" && echo "jobs.${TIMESTAMP}.tar.gz" || echo "full.${TIMESTAMP}.tar.gz")
+#TIMESTAMP="$(date -u +%Y%m%d%H%M%S)"
+#BACKUP_FILE=$(test "$JOB_ONLY" == "true" && echo "jobs.${TIMESTAMP}.tar.gz" || echo "full.${TIMESTAMP}.tar.gz")
+BACKUP_FILE=$(test "$JOB_ONLY" == "true" && echo "sme.jobs.tar.gz" || echo "sme.full.tar.gz")
 test -f "$BACKUP_FILE" && rm -f "$BACKUP_FILE"
 test "$JOB_ONLY" == "true" && \
-  (test -d .docker && test -d .m2 && sudo tar --exclude=".docker/jobs/*/builds/*" -czv -f "$BACKUP_FILE" .docker/jobs .docker/plugins) || \
-  (test -d .docker && test -d .m2 && sudo tar --exclude=".docker/logs" --exclude=".docker/war" --exclude=".docker/workspace" --exclude=".docker/jobs/*/builds/*" -czv -f "$BACKUP_FILE" .docker .m2)
-test -f "$BACKUP_FILE" && mkdir -p .backup
-test -f "$BACKUP_FILE" && mv "$BACKUP_FILE" .backup/
+  (test -d .docker && test -d .m2 && sudo tar --exclude=".docker/jobs/*/builds/*" -czv -f "$BACKUP_FILE" .docker/jobs) || \
+  (test -d .docker && test -d .m2 && sudo tar --exclude=".docker/logs" --exclude=".docker/war" --exclude=".docker/workspace" --exclude=".docker/jobs/*/builds/*" -czv -f "$BACKUP_FILE" .docker .m2 .ssh)
+#test -f "$BACKUP_FILE" && mkdir -p .backup
+#test -f "$BACKUP_FILE" && mv "$BACKUP_FILE" .backup/
 
 test "$NEED_START" == "true" && test -x start.sh && ./start.sh

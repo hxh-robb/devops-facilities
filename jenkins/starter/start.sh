@@ -23,8 +23,9 @@ Host *
     StrictHostKeyChecking no
 EOT
 
-test ! -d .docker && (test -n "$(ls init.tar.gz* 2>/dev/null)" && cat init.tar.gz* | tar -xz -f -)
-test -d .docker && (test -n "$(ls jobs.tar.gz* 2>/dev/null)" && cat jobs.tar.gz* | tar -xz -f -)
+test ! -d ".docker" && (test -n "$(ls init.tar.gz* 2>/dev/null)" && cat init.tar.gz* | tar -xz -f -)
+test ! -d ".docker/plugins" && (test -n "$(ls plugins.tar.gz* 2>/dev/null)" && cat plugins.tar.gz* | tar -xz -f -)
+test ! -d ".docker/jobs" && (test -n "$(ls jobs.tar.gz* 2>/dev/null)" && cat jobs.tar.gz* | tar -xz -f -)
 
 #  -v "$(pwd)/jenkins.id_rsa:/root/.ssh/id_rsa" \
 #  -v "$(pwd)/ssh.config:/root/.ssh/config" \

@@ -18,7 +18,7 @@ BACKUP_FILE=$(test "$JOB_ONLY" == "true" && echo "jobs.${TIMESTAMP}.tar.gz" || e
 test -f "$BACKUP_FILE" && rm -f "$BACKUP_FILE"
 test "$JOB_ONLY" == "true" && \
   (test -d .docker && test -d .m2 && sudo tar --exclude=".docker/jobs/*/builds/*" -czv -f "$BACKUP_FILE" .docker/jobs .docker/plugins) || \
-  (test -d .docker && test -d .m2 && sudo tar --exclude=".docker/logs" --exclude=".docker/war" --exclude=".docker/workspace" --exclude=".docker/jobs/*/builds/*" -czv -f "$BACKUP_FILE" .docker .m2)
+  (test -d .docker && test -d .m2 && sudo tar --exclude=".docker/logs" --exclude=".docker/war" --exclude=".docker/workspace" --exclude=".docker/jobs/*/builds/*" -czv -f "$BACKUP_FILE" .docker .m2 .ssh)
 test -f "$BACKUP_FILE" && mkdir -p .backup
 test -f "$BACKUP_FILE" && mv "$BACKUP_FILE" .backup/
 

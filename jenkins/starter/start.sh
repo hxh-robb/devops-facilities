@@ -27,6 +27,8 @@ test ! -d ".docker" && (test -n "$(ls init.tar.gz* 2>/dev/null)" && cat init.tar
 test ! -d ".docker/plugins" && (test -n "$(ls plugins.tar.gz* 2>/dev/null)" && cat plugins.tar.gz* | tar -xz -f -)
 test ! -d ".docker/jobs" && (test -n "$(ls jobs.tar.gz* 2>/dev/null)" && cat jobs.tar.gz* | tar -xz -f -)
 
+[ -s .dns ] && dns="--dns $(cat .dns)"
+
 #  -v "$(pwd)/jenkins.id_rsa:/root/.ssh/id_rsa" \
 #  -v "$(pwd)/ssh.config:/root/.ssh/config" \
 #  --rm \
@@ -38,7 +40,7 @@ docker run --name "$NAME" -d \
   -v "$(pwd)/.ssh:/root/.ssh" \
   -v "/var/run/docker.sock:/var/run/docker.sock" \
   --restart=unless-stopped \
-  robbtsang/jenkins-with-docker:latest
+  ${dns} robbtsang/jenkins-with-docker:latest
 
 docker exec "$NAME" chown 0:0 -R /root
 test "$SHOW_ADMIN_PASSWD" == "true" && cat .docker/secrets/initial*

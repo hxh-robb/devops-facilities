@@ -12,7 +12,7 @@
           <defaultValue></defaultValue>
         </com.wangyin.ams.cms.abs.ParaReadOnly.WReadonlyStringParameterDefinition>
         <jenkins.plugins.parameter__separator.ParameterSeparatorDefinition plugin="parameter-separator@1.0">
-          <name>separator-3dd16621-434b-46fc-937f-c38a125b2f2e</name>
+          <name>separator-72e8cb1e-c0e9-4cfb-bddf-512bdcc094a7</name>
           <description></description>
           <sectionHeader>git仓库信息</sectionHeader>
           <sectionHeaderStyle>color: white;background: gray;font-family: Roboto, sans-serif !important;padding: 5px; text-align: center;</sectionHeaderStyle>
@@ -28,7 +28,7 @@
           <description>&lt;pre&gt;&lt;!-- TODO --&gt;
 项目git分支
 &lt;/pre&gt;</description>
-          <uuid>3c27bb1d-a168-4cb8-b2de-bacc83a168fe</uuid>
+          <uuid>58e2982c-eb26-4352-820e-d655ebda91a9</uuid>
           <type>PT_BRANCH</type>
           <branch></branch>
           <tagFilter>*</tagFilter>
@@ -40,7 +40,7 @@
           <listSize>0</listSize>
         </net.uaznia.lukanus.hudson.plugins.gitparameter.GitParameterDefinition>
         <jenkins.plugins.parameter__separator.ParameterSeparatorDefinition plugin="parameter-separator@1.0">
-          <name>separator-b3ede52b-7950-4779-bf60-8bf1c5abe35b</name>
+          <name>separator-3efe8670-1c6e-4add-b47d-bf376e4118ab</name>
           <description></description>
           <sectionHeader>构建选项</sectionHeader>
           <sectionHeaderStyle>color: white;background: gray;font-family: Roboto, sans-serif !important;padding: 5px; text-align: center;</sectionHeaderStyle>
@@ -70,7 +70,7 @@
           <defaultValue>true</defaultValue>
         </hudson.model.BooleanParameterDefinition>
         <jenkins.plugins.parameter__separator.ParameterSeparatorDefinition plugin="parameter-separator@1.0">
-          <name>separator-67d9f9f1-6e8a-4e17-b835-901a9d8bae26</name>
+          <name>separator-ee688b1c-b111-46ef-aed1-6b131d5dbd22</name>
           <description></description>
           <sectionHeader>发布选项</sectionHeader>
           <sectionHeaderStyle>color: white;background: gray;font-family: Roboto, sans-serif !important;padding: 5px; text-align: center;</sectionHeaderStyle>
@@ -152,7 +152,7 @@ echo &quot;==============================&quot;
 [ &quot;${SKIP}&quot; == &quot;true&quot; ] &amp;&amp; exit 0
 
 ## Module information file [.out/.mods] does not exist, it should be full build
-([ ! -d &quot;.out&quot; ] || [ ! -f &quot;.out/.mods&quot; ] ) &amp;&amp; MODS=&quot;ALL&quot;
+([ ! -d &quot;dist&quot; ] || [ ! -f &quot;dist/mods&quot; ] ) &amp;&amp; MODS=&quot;ALL&quot;
 
 ## Rewrite parameters and assign build options
 OPT=&quot;&quot;
@@ -171,24 +171,27 @@ echo &quot;==============================&quot;
 
 ## Actually building
 t1=$(date +&quot;%Y-%m-%d %H:%M:%S %z %:::z&quot;)
-rm -rf ~/.m2/repository/com/sme
-rm -rf .release
+#rm -rf ~/.m2/repository/com/sme
+#rm -rf .release
 #./build.sh ${OPT} ${MODS}
+./mod-update.sh
 ./build.sh ${OPT} ${MODS}
 
-## Clear outdated docker images
+
+### Clear outdated docker images
+##echo &quot;==============================&quot;
+#docker rmi $(docker images -q -f dangling=true) &gt;/dev/null  2&gt;&amp;1 || true
 #echo &quot;==============================&quot;
-docker rmi $(docker images -q -f dangling=true) &gt;/dev/null  2&gt;&amp;1 || true
-echo &quot;==============================&quot;
-docker images --filter &quot;dangling=false&quot; --format &quot;{{.Repository}}:{{.Tag}},{{.CreatedAt}}&quot;|grep $(cat .tag|awk -F&apos;:&apos; &apos;{print tolower($1)}&apos;)|grep -v /|\
-while read image; do
-  t2=&quot;$(echo $image|awk -F &apos;,&apos; &apos;{print $2}&apos;)&quot;
-  mod=&quot;$(echo $image|awk -F &apos;,&apos; &apos;{print $1}&apos;)&quot;
-  if [[ &quot;$t2&quot; &gt; &quot;$t1&quot; ]]; then
-    echo &quot;$mod&quot;
-  fi
-done
-echo &quot;==============================&quot;</command>
+##docker images --filter &quot;dangling=false&quot; --format &quot;{{.Repository}}:{{.Tag}},{{.CreatedAt}}&quot;|grep $(cat .tag|awk -F&apos;:&apos; &apos;{print tolower($1)}&apos;)|grep -v /|\
+#docker images --filter &quot;dangling=false&quot; --format &quot;{{.Repository}}:{{.Tag}},{{.CreatedAt}}&quot;|grep -v /|\
+#while read image; do
+#  t2=&quot;$(echo $image|awk -F &apos;,&apos; &apos;{print $2}&apos;)&quot;
+#  mod=&quot;$(echo $image|awk -F &apos;,&apos; &apos;{print $1}&apos;)&quot;
+#  if [[ &quot;$t2&quot; &gt; &quot;$t1&quot; ]]; then
+#    echo &quot;$mod&quot;
+#  fi
+#done
+#echo &quot;==============================&quot;</command>
     </hudson.tasks.Shell>
     <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder plugin="conditional-buildstep@1.3.6">
       <condition class="org.jenkins_ci.plugins.run_condition.contributed.ShellCondition" plugin="run-condition@1.2">

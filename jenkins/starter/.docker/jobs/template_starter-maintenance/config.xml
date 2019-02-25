@@ -1,0 +1,268 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <com.wangyin.ams.cms.abs.ParaReadOnly.WReadonlyStringParameterDefinition plugin="readonly-parameters@1.0.0">
+          <name>SERVER</name>
+          <description>远端服务器</description>
+          <defaultValue></defaultValue>
+        </com.wangyin.ams.cms.abs.ParaReadOnly.WReadonlyStringParameterDefinition>
+        <com.wangyin.ams.cms.abs.ParaReadOnly.WReadonlyStringParameterDefinition plugin="readonly-parameters@1.0.0">
+          <name>DEVOPS_ID</name>
+          <description>部署标识(starter所在目录)</description>
+          <defaultValue></defaultValue>
+        </com.wangyin.ams.cms.abs.ParaReadOnly.WReadonlyStringParameterDefinition>
+        <jenkins.plugins.parameter__separator.ParameterSeparatorDefinition plugin="parameter-separator@1.0">
+          <name>separator-a37083ae-939e-44e7-a616-a7d7ba5147fb</name>
+          <description></description>
+          <sectionHeader>starter维护</sectionHeader>
+          <sectionHeaderStyle>color: white;background: gray;font-family: Roboto, sans-serif !important;padding: 5px; text-align: center;</sectionHeaderStyle>
+          <separatorStyle>border: 0;</separatorStyle>
+        </jenkins.plugins.parameter__separator.ParameterSeparatorDefinition>
+        <hudson.model.ChoiceParameterDefinition>
+          <name>MODS</name>
+          <description>&lt;pre&gt;&lt;!-- TODO --&gt;
+维护模块
+&lt;ul&gt;
+&lt;li&gt;ALL = 全模块&lt;/li&gt;
+&lt;li&gt;UPDATED = 有更新的模块&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/pre&gt;</description>
+          <choices class="java.util.Arrays$ArrayList">
+            <a class="string-array">
+              <string>ALL</string>
+              <string>UPDATED</string>
+            </a>
+          </choices>
+        </hudson.model.ChoiceParameterDefinition>
+        <hudson.model.ChoiceParameterDefinition>
+          <name>OP</name>
+          <description>&lt;pre&gt;&lt;!-- TODO --&gt;
+维护操作
+&lt;ul&gt;
+&lt;li&gt;START(RESTART) = 启动/重启程序&lt;/li&gt;
+&lt;li&gt;STOP = 停止程序&lt;/li&gt;
+&lt;!--
+
+LOGS
+STATS
+DUMP
+CLEAN
+CHECK CONFIGS
+
+&lt;li&gt;LOGS = 查看程序运行日志&lt;/li&gt;
+&lt;li&gt;STATS = 查看程序运行状态(进程号/资源占用情况/映射端口/映射目录)&lt;/li&gt;
+&lt;li&gt;DUMP = 转存程序运行信息(STATS/LOGS)&lt;/li&gt;
+&lt;li&gt;CLEAN = 停止程序并清空部署目录&lt;/li&gt;
+&lt;li&gt;CHECK CONFIGS = 查看当前部署配置明细&lt;/li&gt;
+--&gt;
+&lt;/ul&gt;
+&lt;/pre&gt;</description>
+          <choices class="java.util.Arrays$ArrayList">
+            <a class="string-array">
+              <string>START</string>
+              <string>STOP</string>
+            </a>
+          </choices>
+        </hudson.model.ChoiceParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+    <hudson.plugins.throttleconcurrents.ThrottleJobProperty plugin="throttle-concurrents@2.0.1">
+      <maxConcurrentPerNode>1</maxConcurrentPerNode>
+      <maxConcurrentTotal>1</maxConcurrentTotal>
+      <categories class="java.util.concurrent.CopyOnWriteArrayList"/>
+      <throttleEnabled>true</throttleEnabled>
+      <throttleOption>project</throttleOption>
+      <limitOneJobWithMatchingParams>false</limitOneJobWithMatchingParams>
+      <paramsToUseForLimit></paramsToUseForLimit>
+    </hudson.plugins.throttleconcurrents.ThrottleJobProperty>
+    <com.joelj.jenkins.eztemplates.TemplateProperty plugin="ez-templates@1.3.2"/>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.plugins.groovy.SystemGroovy plugin="groovy@2.1">
+      <source class="hudson.plugins.groovy.StringSystemScriptSource">
+        <script plugin="script-security@1.51">
+          <script>import jenkins.model.*;
+import hudson.model.*;
+import hudson.EnvVars;
+import jenkins.plugins.publish_over_ssh.*;
+
+def jenkins = Jenkins.instance;
+def server = build.buildVariables.get(&apos;SERVER&apos;);
+def keyPath;
+
+jenkins.getDescriptorByType(BapSshPublisherPlugin.Descriptor.class).with {
+  descriptor -&gt;
+  descriptor.hostConfigurations.each{
+    config -&gt; 
+    if( config.name == &quot;$server&quot; ){
+      keyPath = config.keyInfo.keyPath;
+    }
+  }
+}
+
+def vars = [KEY_PATH: keyPath]
+build.environments.add(0, Environment.create(new EnvVars(vars)))
+
+/************************************** Overwrite SSH Server ************************************/
+
+if( build.parent.displayName == &apos;template_starter-maintenance&apos;) {
+  server = &apos;&apos;;
+}
+
+build.parent.builders.each{
+  builder -&gt;
+  if( &apos;BapSshBuilderPlugin&apos; == builder.class.simpleName ){
+    builder.delegate.delegate.publishers.each{
+      publisher -&gt;
+      publisher.configName = server;
+    }
+  }
+};
+build.parent.save();</script>
+          <sandbox>false</sandbox>
+        </script>
+      </source>
+    </hudson.plugins.groovy.SystemGroovy>
+    <jenkins.plugins.publish__over__ssh.BapSshBuilderPlugin plugin="publish-over-ssh@1.20.1">
+      <delegate>
+        <consolePrefix>SSH: </consolePrefix>
+        <delegate plugin="publish-over@0.22">
+          <publishers>
+            <jenkins.plugins.publish__over__ssh.BapSshPublisher plugin="publish-over-ssh@1.20.1">
+              <configName>jenkins@192.168.0.41</configName>
+              <verbose>false</verbose>
+              <transfers>
+                <jenkins.plugins.publish__over__ssh.BapSshTransfer>
+                  <remoteDirectory></remoteDirectory>
+                  <sourceFiles></sourceFiles>
+                  <excludes></excludes>
+                  <removePrefix></removePrefix>
+                  <remoteDirectorySDF>false</remoteDirectorySDF>
+                  <flatten>false</flatten>
+                  <cleanRemote>false</cleanRemote>
+                  <noDefaultExcludes>false</noDefaultExcludes>
+                  <makeEmptyDirs>false</makeEmptyDirs>
+                  <patternSeparator>[, ]+</patternSeparator>
+                  <execCommand>#!/usr/bin/env bash
+
+if [ ! -d &quot;${DEVOPS_ID}&quot; ]; then
+  echo &quot;${DEVOPS_ID}尚未部署, 请先执行[${DEVOPS_ID}_deployment]任务&quot;
+  exit 1;
+fi
+
+echo &quot;^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [${MODS}] - [${OP}] ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^&quot;
+
+## LOGS
+if [ &quot;LOGS&quot; == &quot;${OP}&quot; ]; then
+  if [ ! -x &quot;${DEVOPS_ID}/cmd.sh&quot; ]; then
+    echo &quot;cmd.sh脚本不存在,无法查看日志&quot;
+    exit 1;
+  fi
+
+  if [ &quot;${MODS}&quot; == &quot;ALL&quot; ] ||  [ &quot;${MODS}&quot; == &quot;UPDATED&quot; ]; then
+    [ &quot;${MODS}&quot; == &quot;UPDATED&quot; ] &amp;&amp; echo &quot;^^^^^ TODO:UPDATED MODS [${OP}] IS NOT YET IMPLEMENTED ^^^^^&quot;
+    ${DEVOPS_ID}/cmd.sh logs --no-color --tail=1000
+  else
+    ${DEVOPS_ID}/cmd.sh logs --no-color --tail=1000 ${MODS}
+  fi
+
+## STATS
+elif [ &quot;STATS&quot; == &quot;${OP}&quot; ]; then
+  if [ ! -x &quot;${DEVOPS_ID}/dump-stdout.sh&quot; ]; then
+    echo &quot;dump-stdout.sh脚本不存在,无法查看程序运行状态&quot;
+    exit 1;
+  fi
+
+  if [ &quot;${MODS}&quot; == &quot;ALL&quot; ] ||  [ &quot;${MODS}&quot; == &quot;UPDATED&quot; ]; then
+    [ &quot;${MODS}&quot; == &quot;UPDATED&quot; ] &amp;&amp; echo &quot;^^^^^ TODO:UPDATED MODS [${OP}] IS NOT YET IMPLEMENTED ^^^^^&quot;
+    ${DEVOPS_ID}/dump-stdout.sh
+  else
+    ${DEVOPS_ID}/dump-stdout.sh ${MODS}
+  fi
+
+## START
+elif [ &quot;START&quot; == &quot;${OP}&quot; ]; then
+  if [ ! -x &quot;${DEVOPS_ID}/start.sh&quot; ]; then
+    echo &quot;start.sh脚本不存在,无法启动/重启程序&quot;
+    exit 1;
+  fi
+
+  [ &quot;${MODS}&quot; != &quot;ALL&quot; ] &amp;&amp; echo &quot;^^^^^ TODO:MOD [${OP}] IS NOT YET IMPLEMENTED ^^^^^&quot;
+  ${DEVOPS_ID}/start.sh
+
+## STOP
+elif [ &quot;STOP&quot; == &quot;${OP}&quot; ]; then
+  if [ ! -x &quot;${DEVOPS_ID}/stop.sh&quot; ]; then
+    echo &quot;stop.sh脚本不存在,无法停止程序&quot;
+    exit 1;
+  fi
+
+  [ &quot;${MODS}&quot; != &quot;ALL&quot; ] &amp;&amp; echo &quot;^^^^^ TODO:MOD [${OP}] IS NOT YET IMPLEMENTED ^^^^^&quot;
+  ${DEVOPS_ID}/stop.sh
+
+## DUMP
+elif [ &quot;DUMP&quot; == &quot;${OP}&quot; ]; then
+  if [ ! -x &quot;${DEVOPS_ID}/dump.sh&quot; ]; then
+    echo &quot;dump.sh脚本不存在,无法转存程序运行信息&quot;
+    exit 1;
+  fi
+
+  [ &quot;${MODS}&quot; != &quot;ALL&quot; ] &amp;&amp; echo &quot;^^^^^ TODO:MOD [${OP}] IS NOT YET IMPLEMENTED ^^^^^&quot;
+  ${DEVOPS_ID}/dump.sh
+
+## CLEAN
+elif [ &quot;CLEAN&quot; == &quot;${OP}&quot; ]; then
+  TS=&quot;$(date -u +%Y%m%d%H%M%S)&quot;
+  test -x &quot;${DEVOPS_ID}/stop.sh&quot; &amp;&amp;  &quot;${DEVOPS_ID}&quot;/stop.sh
+  echo &quot;迁移当前starter至${DEVOPS_ID}_${TS}&quot;
+  mv &quot;${DEVOPS_ID}&quot; &quot;${DEVOPS_ID}_${TS}&quot;
+
+## OTHERS
+else
+  echo &quot;[$OP]指令暂未实现&quot;
+  exit 1;
+
+fi</execCommand>
+                  <execTimeout>1800000</execTimeout>
+                  <usePty>false</usePty>
+                  <useAgentForwarding>false</useAgentForwarding>
+                </jenkins.plugins.publish__over__ssh.BapSshTransfer>
+              </transfers>
+              <useWorkspaceInPromotion>false</useWorkspaceInPromotion>
+              <usePromotionTimestamp>false</usePromotionTimestamp>
+            </jenkins.plugins.publish__over__ssh.BapSshPublisher>
+          </publishers>
+          <continueOnError>false</continueOnError>
+          <failOnError>false</failOnError>
+          <alwaysPublishFromMaster>false</alwaysPublishFromMaster>
+          <hostConfigurationAccess class="jenkins.plugins.publish_over_ssh.BapSshPublisherPlugin" reference="../.."/>
+        </delegate>
+      </delegate>
+    </jenkins.plugins.publish__over__ssh.BapSshBuilderPlugin>
+    <hudson.tasks.Shell>
+      <command>#!/usr/bin/env bash
+
+if [ -n &quot;$(ssh -o StrictHostKeyChecking=no -i ${KEY_PATH} $SERVER ls /home/jenkins/${DEVOPS_ID}/*.tar.gz)&quot; ]; then
+  ssh -o StrictHostKeyChecking=no -i ${KEY_PATH} $SERVER mkdir -p /home/jenkins/${DEVOPS_ID}/.dump
+  scp -o StrictHostKeyChecking=no -i ${KEY_PATH} $SERVER:/home/jenkins/${DEVOPS_ID}/*.tar.gz .
+  ssh -o StrictHostKeyChecking=no -i ${KEY_PATH} $SERVER mv /home/jenkins/${DEVOPS_ID}/dump*.tar.gz /home/jenkins/${DEVOPS_ID}/.dump
+fi</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers/>
+  <buildWrappers>
+    <hudson.plugins.timestamper.TimestamperBuildWrapper plugin="timestamper@1.9"/>
+  </buildWrappers>
+</project>

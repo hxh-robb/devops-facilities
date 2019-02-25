@@ -1,0 +1,80 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description>&lt;pre&gt;&#xd;
+&lt;b&gt;&lt;font color=&quot;red&quot;&gt;WARNING:This is a downstream job, do NOT perform this job manually!&lt;/font&gt;&lt;/b&gt;&#xd;
+&lt;/pre&gt;</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>DEVOPS_ID</name>
+          <description></description>
+          <defaultValue></defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+    <hudson.plugins.throttleconcurrents.ThrottleJobProperty plugin="throttle-concurrents@2.0.1">
+      <maxConcurrentPerNode>1</maxConcurrentPerNode>
+      <maxConcurrentTotal>1</maxConcurrentTotal>
+      <categories class="java.util.concurrent.CopyOnWriteArrayList"/>
+      <throttleEnabled>true</throttleEnabled>
+      <throttleOption>project</throttleOption>
+      <limitOneJobWithMatchingParams>false</limitOneJobWithMatchingParams>
+      <paramsToUseForLimit></paramsToUseForLimit>
+    </hudson.plugins.throttleconcurrents.ThrottleJobProperty>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.plugins.groovy.SystemGroovy plugin="groovy@2.1">
+      <source class="hudson.plugins.groovy.StringSystemScriptSource">
+        <script plugin="script-security@1.51">
+          <script>import jenkins.model.*;
+import hudson.model.*;
+import jenkins.plugins.parameter_separator.ParameterSeparatorDefinition;
+
+def jenkins = Jenkins.instance;
+
+def devopsId = build.getEnvironment(listener).get(&apos;DEVOPS_ID&apos;);
+println &quot;DEVOPS_ID = [${devopsId}]&quot;;
+
+def job = jenkins.getItemByFullName(&quot;${devopsId}_building&quot;);
+println &quot;JOB = [${job}]&quot;;
+
+println &quot;=====================&quot;
+
+if( null != job){
+  //job.scheduleBuild2(0);
+  
+  def list = [];
+  job.getProperty(ParametersDefinitionProperty.class).parameterDefinitions.each{
+    if(it.class != ParameterSeparatorDefinition &amp;&amp; it.name != &apos;SKIP&apos; &amp;&amp; it.name != &apos;MODS&apos;) {
+      def name = it.name;
+      def value = null;
+      if(it.defaultValue != null){
+        value = &quot;${it.defaultValue}&quot;
+      }
+      list.add(new StringParameterValue(name, value))
+    }
+  };
+  // buildingJob.getProperty(ParametersDefinitionProperty.class);
+  list.add(new StringParameterValue(&apos;SKIP&apos;, &apos;true&apos;))
+  def paramsAction = new ParametersAction(list);
+  job.scheduleBuild2(0, paramsAction);
+}</script>
+          <sandbox>false</sandbox>
+        </script>
+      </source>
+    </hudson.plugins.groovy.SystemGroovy>
+  </builders>
+  <publishers/>
+  <buildWrappers/>
+</project>

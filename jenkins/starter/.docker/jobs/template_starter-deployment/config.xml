@@ -1,0 +1,362 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description>&lt;pre&gt;&#xd;
+TODO&#xd;
+&lt;/pre&gt;</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <com.wangyin.ams.cms.abs.ParaReadOnly.WReadonlyStringParameterDefinition plugin="readonly-parameters@1.0.0">
+          <name>SERVER</name>
+          <description>远端服务器</description>
+          <defaultValue></defaultValue>
+        </com.wangyin.ams.cms.abs.ParaReadOnly.WReadonlyStringParameterDefinition>
+        <com.wangyin.ams.cms.abs.ParaReadOnly.WReadonlyStringParameterDefinition plugin="readonly-parameters@1.0.0">
+          <name>DEVOPS_ID</name>
+          <description>部署标识(用于配置/构建/部署目录命名)</description>
+          <defaultValue></defaultValue>
+        </com.wangyin.ams.cms.abs.ParaReadOnly.WReadonlyStringParameterDefinition>
+        <jenkins.plugins.parameter__separator.ParameterSeparatorDefinition plugin="parameter-separator@1.0">
+          <name>separator-0740af45-6462-4360-8bd8-d0aab110e226</name>
+          <description></description>
+          <sectionHeader>starter部署</sectionHeader>
+          <sectionHeaderStyle>color: white;background: gray;font-family: Roboto, sans-serif !important;padding: 5px; text-align: center;</sectionHeaderStyle>
+          <separatorStyle>border: 0;</separatorStyle>
+        </jenkins.plugins.parameter__separator.ParameterSeparatorDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>SKIP_DEPLOY_STARTER</name>
+          <description>&lt;pre&gt;&lt;!-- TODO --&gt;
+是否跳过starter部署
+&lt;/pre&gt;</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <com.gem.persistentparameter.PersistentStringParameterDefinition plugin="persistent-parameter@1.1">
+          <name>STARTER_TAG</name>
+          <description>starter的docker镜像标识</description>
+          <defaultValue></defaultValue>
+          <successfulOnly>true</successfulOnly>
+        </com.gem.persistentparameter.PersistentStringParameterDefinition>
+        <hudson.model.ChoiceParameterDefinition>
+          <name>MODS</name>
+          <description>&lt;pre&gt;&lt;!-- TODO --&gt;
+要部署的模块
+&lt;ul&gt;
+&lt;li&gt;ALL = 全模块部署(首次部署将强制使用全模块部署)&lt;/li&gt;
+&lt;li&gt;UPDATED = 仅部署有更新的模块&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/pre&gt;</description>
+          <choices class="java.util.Arrays$ArrayList">
+            <a class="string-array">
+              <string>ALL</string>
+              <string>UPDATED</string>
+            </a>
+          </choices>
+        </hudson.model.ChoiceParameterDefinition>
+        <jenkins.plugins.parameter__separator.ParameterSeparatorDefinition plugin="parameter-separator@1.0">
+          <name>separator-7bffb0e7-4039-4cc2-bce7-bc3dd36a8afa</name>
+          <description></description>
+          <sectionHeader>starter配置管理</sectionHeader>
+          <sectionHeaderStyle>color: white;background: gray;font-family: Roboto, sans-serif !important;padding: 5px; text-align: center;</sectionHeaderStyle>
+          <separatorStyle>border: 0;</separatorStyle>
+        </jenkins.plugins.parameter__separator.ParameterSeparatorDefinition>
+        <org.biouno.unochoice.ChoiceParameter plugin="uno-choice@2.1">
+          <name>SKIP_CONFIGS</name>
+          <description>&lt;pre&gt;&lt;!-- TODO --&gt;
+是否跳过配置文件编辑
+&lt;/pre&gt;</description>
+          <randomName>choice-parameter-40615581922978</randomName>
+          <visibleItemCount>1</visibleItemCount>
+          <script class="org.biouno.unochoice.model.GroovyScript">
+            <secureScript plugin="script-security@1.51">
+              <script>return [&apos;TRUE&apos;, &apos;FALSE&apos;]</script>
+              <sandbox>false</sandbox>
+            </secureScript>
+            <secureFallbackScript plugin="script-security@1.51">
+              <script></script>
+              <sandbox>false</sandbox>
+            </secureFallbackScript>
+          </script>
+          <projectName>template_starter-deployment</projectName>
+          <choiceType>PT_SINGLE_SELECT</choiceType>
+          <filterable>false</filterable>
+          <filterLength>1</filterLength>
+        </org.biouno.unochoice.ChoiceParameter>
+        <org.biouno.unochoice.DynamicReferenceParameter plugin="uno-choice@2.1">
+          <name></name>
+          <description></description>
+          <randomName>choice-parameter-40839089384172</randomName>
+          <visibleItemCount>1</visibleItemCount>
+          <script class="org.biouno.unochoice.model.GroovyScript">
+            <secureScript plugin="script-security@1.51">
+              <script>switch(SKIP_CONFIGS){
+ case~/.*FALSE.*/:
+    return &apos;&apos;&apos;
+&lt;hr&gt;
+&lt;pre&gt;
+&lt;font color=&quot;gray&quot;&gt;# CONFIGS编辑说明:&lt;/font&gt;
+/home/jenkins/.config/config_1 &lt;font color=&quot;gray&quot;&gt;# 配置文件所在路径&lt;/font&gt;
+CONFIG_A=VALUE1 &lt;font color=&quot;gray&quot;&gt;# Key-Value 配置项&lt;/font&gt;
+CONFIG_B=VALUE2 &lt;font color=&quot;gray&quot;&gt;# Key-Value 配置项&lt;/font&gt;
+CONFIG_C=VALUE3 &lt;font color=&quot;gray&quot;&gt;# Key-Value 配置项&lt;/font&gt;
+========== 
+... &lt;font color=&quot;gray&quot;&gt;# 其他配置文件, 支持多文件编辑&lt;/font&gt;
+&lt;/pre&gt;
+&apos;&apos;&apos;
+ break
+ default:
+    return &quot;&lt;hr&gt;&quot;
+ break
+}</script>
+              <sandbox>false</sandbox>
+            </secureScript>
+            <secureFallbackScript plugin="script-security@1.51">
+              <script></script>
+              <sandbox>false</sandbox>
+            </secureFallbackScript>
+          </script>
+          <projectName>template_starter-deployment</projectName>
+          <parameters class="linked-hash-map"/>
+          <referencedParameters>SKIP_CONFIGS</referencedParameters>
+          <choiceType>ET_FORMATTED_HTML</choiceType>
+          <omitValueField>false</omitValueField>
+        </org.biouno.unochoice.DynamicReferenceParameter>
+        <com.gem.persistentparameter.PersistentTextParameterDefinition plugin="persistent-parameter@1.1">
+          <name>CONFIGS</name>
+          <description></description>
+          <defaultValue></defaultValue>
+          <successfulOnly>true</successfulOnly>
+        </com.gem.persistentparameter.PersistentTextParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+    <hudson.plugins.throttleconcurrents.ThrottleJobProperty plugin="throttle-concurrents@2.0.1">
+      <maxConcurrentPerNode>1</maxConcurrentPerNode>
+      <maxConcurrentTotal>1</maxConcurrentTotal>
+      <categories class="java.util.concurrent.CopyOnWriteArrayList"/>
+      <throttleEnabled>true</throttleEnabled>
+      <throttleOption>project</throttleOption>
+      <limitOneJobWithMatchingParams>false</limitOneJobWithMatchingParams>
+      <paramsToUseForLimit></paramsToUseForLimit>
+    </hudson.plugins.throttleconcurrents.ThrottleJobProperty>
+    <com.joelj.jenkins.eztemplates.TemplateProperty plugin="ez-templates@1.3.2"/>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.plugins.groovy.SystemGroovy plugin="groovy@2.1">
+      <source class="hudson.plugins.groovy.StringSystemScriptSource">
+        <script plugin="script-security@1.51">
+          <script>import hudson.model.ParametersAction;
+
+/************************************** Merging CONFIGS parameter ************************************/
+
+if(&apos;TRUE&apos; ==  build.buildVariables.get(&apos;SKIP_CONFIGS&apos;)){
+  def lastSuccessfulBuild=build.parent.lastSuccessfulBuild;
+  if( null != lastSuccessfulBuild ){
+    def lastSuccessfulBuildConfigs = lastSuccessfulBuild.getActions(hudson.model.ParametersAction.class)[0].getParameter(&apos;CONFIGS&apos;);
+    def overrides = [ 
+      lastSuccessfulBuildConfigs.class.newInstance([
+        lastSuccessfulBuildConfigs.name, 
+        lastSuccessfulBuildConfigs.value, 
+        lastSuccessfulBuildConfigs.description
+      ] as Object[])
+    ];
+    build.replaceAction(build.getActions(ParametersAction.class)[0].merge(new ParametersAction(overrides)));
+  }
+}
+
+// TODO:merging CONFIGS between .config and new version starter image
+
+/************************************** Overwrite SSH Server ************************************/
+
+def server = build.buildVariables.get(&apos;SERVER&apos;);
+if( build.parent.displayName == &apos;template_starter-deployment&apos;) {
+  server = &apos;&apos;;
+}
+
+build.parent.builders.each{
+  builder -&gt;
+  if( &apos;BapSshBuilderPlugin&apos; == builder.class.simpleName ){
+    builder.delegate.delegate.publishers.each{
+      publisher -&gt;
+      publisher.configName = server;
+    }
+  }
+};
+build.parent.save();</script>
+          <sandbox>false</sandbox>
+        </script>
+      </source>
+    </hudson.plugins.groovy.SystemGroovy>
+    <jenkins.plugins.publish__over__ssh.BapSshBuilderPlugin plugin="publish-over-ssh@1.20.1">
+      <delegate>
+        <consolePrefix>SSH: </consolePrefix>
+        <delegate plugin="publish-over@0.22">
+          <publishers>
+            <jenkins.plugins.publish__over__ssh.BapSshPublisher plugin="publish-over-ssh@1.20.1">
+              <configName>jenkins@192.168.0.41</configName>
+              <verbose>false</verbose>
+              <transfers>
+                <jenkins.plugins.publish__over__ssh.BapSshTransfer>
+                  <remoteDirectory></remoteDirectory>
+                  <sourceFiles></sourceFiles>
+                  <excludes></excludes>
+                  <removePrefix></removePrefix>
+                  <remoteDirectorySDF>false</remoteDirectorySDF>
+                  <flatten>false</flatten>
+                  <cleanRemote>false</cleanRemote>
+                  <noDefaultExcludes>false</noDefaultExcludes>
+                  <makeEmptyDirs>false</makeEmptyDirs>
+                  <patternSeparator>[, ]+</patternSeparator>
+                  <execCommand>#!/usr/bin/env bash
+
+echo &quot;^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^&quot;
+
+FORCE_CONFIGS=&quot;FALSE&quot;
+if [ ! -d &quot;.config/${DEVOPS_ID}&quot; ]; then
+  echo &quot;starter配置目录不存在, 创建${DEVOPS_ID}配置目录&quot;
+  mkdir -p &quot;.config/${DEVOPS_ID}&quot;
+  FORCE_CONFIGS=&quot;TRUE&quot;
+  echo &quot;^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^&quot;
+fi
+
+if [ &quot;TRUE&quot; == &quot;$FORCE_CONFIGS&quot; ] || ([ &quot;FALSE&quot; == &quot;${SKIP_CONFIGS}&quot; ] &amp;&amp; [ -n &quot;${CONFIGS}&quot; ]) ; then
+  echo &quot;根据CONFIGS参数生成配置文件&quot;
+  CFG=&quot;&quot;
+  while read LINE; do
+      if [[  &quot;$LINE&quot; =~ ^/home/jenkins/.+$ ]]; then
+        CFG=&quot;${LINE}&quot;
+        mkdir -p $(dirname ${CFG})
+        cp /dev/null &quot;${CFG}&quot;
+      elif [[  &quot;$LINE&quot; =~ ^=+$ ]]; then
+        CFG=&quot;&quot;
+      else
+        test -n &quot;${CFG}&quot; &amp;&amp; (echo &quot;${LINE}&quot; &gt;&gt; &quot;${CFG}&quot;)
+      fi
+  done &lt;&lt;&lt; &quot;${CONFIGS}&quot;
+  echo &quot;${DEVOPS_ID}配置目录:&quot;
+  ls -Rl ~/.config/${DEVOPS_ID}
+  echo &quot;^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^&quot;
+fi
+
+if [ &quot;false&quot; == &quot;${SKIP_DEPLOY_STARTER}&quot; ]; then
+  TS=&quot;$(date -u +%Y%m%d%H%M%S)&quot;
+  NEED_DEPLOY=&quot;FALSE&quot;
+  if [ ! -d &quot;${DEVOPS_ID}&quot; ]; then
+    NEED_DEPLOY=&quot;TRUE&quot;
+    echo &quot;starter部署目录不存在, 首次部署starter(${DEVOPS_ID})&quot;
+  elif [ &quot;ALL&quot; == &quot;${MODS}&quot; ]; then
+    NEED_DEPLOY=&quot;TRUE&quot;
+    echo &quot;starter部署目录已存在, 重新部署starter(${DEVOPS_ID})&quot;
+    test -x &quot;${DEVOPS_ID}/stop.sh&quot; &amp;&amp;  &quot;${DEVOPS_ID}&quot;/stop.sh
+    echo &quot;迁移当前starter至${DEVOPS_ID}_${TS}&quot;
+    mv &quot;${DEVOPS_ID}&quot; &quot;${DEVOPS_ID}_${TS}&quot;
+  fi
+
+  if [ &quot;TRUE&quot; == &quot;${NEED_DEPLOY}&quot; ]; then
+    # starter deployment
+    test -n &quot;$(docker images -q -f dangling=true)&quot; &amp;&amp; docker rmi $(docker images -q -f dangling=true)
+    docker pull &quot;${STARTER_TAG}&quot;
+    STARTER_CID=&quot;$(docker run --rm -td ${STARTER_TAG} ash)&quot;
+    docker cp &quot;${STARTER_CID}:/app-starter&quot; &quot;${TS}&quot;
+    mv &quot;${TS}&quot; &quot;${DEVOPS_ID}&quot;
+    docker stop &quot;${STARTER_CID}&quot;
+    test -n &quot;$(docker images -q -f dangling=true)&quot; &amp;&amp; docker rmi $(docker images -q -f dangling=true)
+
+    #  settings
+    if [ -f &quot;.config/${DEVOPS_ID}/settings&quot; ]; then
+      mv &quot;${DEVOPS_ID}/settings&quot; &quot;${DEVOPS_ID}/settings-original&quot;
+      ln -s ~/.config/${DEVOPS_ID}/settings &quot;${DEVOPS_ID}/settings&quot;
+    fi
+
+    #  mod configurations
+    if [ -d &quot;.config/${DEVOPS_ID}/config&quot; ]; then
+      mv &quot;${DEVOPS_ID}/config&quot; &quot;${DEVOPS_ID}/config-original&quot;
+      ln -s ~/.config/${DEVOPS_ID}/config &quot;${DEVOPS_ID}/config&quot;
+    fi
+
+    echo &quot;starter(${DEVOPS_ID})部署完成&quot;
+    ls -lR ~/${DEVOPS_ID}
+    echo &quot;^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^&quot;
+  fi
+
+  echo &quot;更新模块&quot;
+  ( [ &quot;ALL&quot; == &quot;${MODS}&quot; ] || [ &quot;UPDATED&quot; == &quot;${MODS}&quot; ] ) &amp;&amp; \
+    &quot;${DEVOPS_ID}&quot;/cmd.sh pull || \
+    &quot;${DEVOPS_ID}&quot;/cmd.sh pull &quot;${MODS}&quot;
+  &quot;${DEVOPS_ID}&quot;/start.sh
+  test -n &quot;$(docker images -q -f dangling=true)&quot; &amp;&amp; docker rmi $(docker images -q -f dangling=true)
+  echo &quot;^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^&quot;
+fi</execCommand>
+                  <execTimeout>1800000</execTimeout>
+                  <usePty>false</usePty>
+                  <useAgentForwarding>false</useAgentForwarding>
+                </jenkins.plugins.publish__over__ssh.BapSshTransfer>
+              </transfers>
+              <useWorkspaceInPromotion>false</useWorkspaceInPromotion>
+              <usePromotionTimestamp>false</usePromotionTimestamp>
+            </jenkins.plugins.publish__over__ssh.BapSshPublisher>
+          </publishers>
+          <continueOnError>false</continueOnError>
+          <failOnError>false</failOnError>
+          <alwaysPublishFromMaster>false</alwaysPublishFromMaster>
+          <hostConfigurationAccess class="jenkins.plugins.publish_over_ssh.BapSshPublisherPlugin" reference="../.."/>
+        </delegate>
+      </delegate>
+    </jenkins.plugins.publish__over__ssh.BapSshBuilderPlugin>
+    <hudson.plugins.parameterizedtrigger.TriggerBuilder plugin="parameterized-trigger@2.35.2">
+      <configs>
+        <hudson.plugins.parameterizedtrigger.BlockableBuildTriggerConfig>
+          <configs>
+            <hudson.plugins.parameterizedtrigger.PredefinedBuildParameters>
+              <properties>DEVOPS_ID=${DEVOPS_ID}
+STARTER_TAG=${STARTER_TAG}</properties>
+              <textParamValueOnNewLine>false</textParamValueOnNewLine>
+            </hudson.plugins.parameterizedtrigger.PredefinedBuildParameters>
+          </configs>
+          <projects>init_mods-dropdown</projects>
+          <condition>ALWAYS</condition>
+          <triggerWithNoParameters>false</triggerWithNoParameters>
+          <triggerFromChildProjects>false</triggerFromChildProjects>
+          <block>
+            <buildStepFailureThreshold>
+              <name>FAILURE</name>
+              <ordinal>2</ordinal>
+              <color>RED</color>
+              <completeBuild>true</completeBuild>
+            </buildStepFailureThreshold>
+            <unstableThreshold>
+              <name>UNSTABLE</name>
+              <ordinal>1</ordinal>
+              <color>YELLOW</color>
+              <completeBuild>true</completeBuild>
+            </unstableThreshold>
+            <failureThreshold>
+              <name>FAILURE</name>
+              <ordinal>2</ordinal>
+              <color>RED</color>
+              <completeBuild>true</completeBuild>
+            </failureThreshold>
+          </block>
+          <buildAllNodesWithLabel>false</buildAllNodesWithLabel>
+        </hudson.plugins.parameterizedtrigger.BlockableBuildTriggerConfig>
+      </configs>
+    </hudson.plugins.parameterizedtrigger.TriggerBuilder>
+  </builders>
+  <publishers/>
+  <buildWrappers>
+    <hudson.plugins.ws__cleanup.PreBuildCleanup plugin="ws-cleanup@0.37">
+      <deleteDirs>false</deleteDirs>
+      <cleanupParameter></cleanupParameter>
+      <externalDelete></externalDelete>
+      <disableDeferredWipeout>false</disableDeferredWipeout>
+    </hudson.plugins.ws__cleanup.PreBuildCleanup>
+    <hudson.plugins.timestamper.TimestamperBuildWrapper plugin="timestamper@1.9"/>
+  </buildWrappers>
+</project>

@@ -1,0 +1,559 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description>&lt;pre&gt;&#xd;
+&lt;!--&#xd;
+Programmatically add DevOps jobs:&#xd;
+TODO&#xd;
+--&gt;&#xd;
+TODO&#xd;
+&lt;/pre&gt;</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>NAME</name>
+          <description>&lt;pre&gt;&lt;!-- TODO --&gt;
+项目名称(请输入数字/小写英文/减号(用作分隔),用作部署目录及docker镜像命名)
+&lt;/pre&gt;</description>
+          <defaultValue></defaultValue>
+          <trim>true</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>DESC</name>
+          <description>&lt;pre&gt;&lt;!-- TODO --&gt;
+项目描述
+&lt;/pre&gt;</description>
+          <defaultValue></defaultValue>
+          <trim>true</trim>
+        </hudson.model.StringParameterDefinition>
+        <jp.ikedam.jenkins.plugins.extensible__choice__parameter.ExtensibleChoiceParameterDefinition plugin="extensible-choice-parameter@1.6.0">
+          <name>SERVER</name>
+          <description>&lt;pre&gt;&lt;!-- TODO --&gt;
+远端服务器
+&lt;/pre&gt;</description>
+          <editable>false</editable>
+          <editableType>NoFilter</editableType>
+          <choiceListProvider class="jp.ikedam.jenkins.plugins.extensible_choice_parameter.SystemGroovyChoiceListProvider">
+            <groovyScript plugin="script-security@1.51">
+              <script>import jenkins.model.*;
+import jenkins.plugins.publish_over_ssh.*;
+
+def servers = [];
+
+Jenkins.instance.getDescriptorByType(BapSshPublisherPlugin.Descriptor.class).with{
+  it.hostConfigurations.each{
+  	server -&gt; servers.add(server.name)
+  }
+}
+
+if(servers.size == 0){
+  return [&apos;NONE&apos;];
+}
+
+return servers;</script>
+              <sandbox>false</sandbox>
+            </groovyScript>
+            <usePredefinedVariables>false</usePredefinedVariables>
+          </choiceListProvider>
+        </jp.ikedam.jenkins.plugins.extensible__choice__parameter.ExtensibleChoiceParameterDefinition>
+        <org.biouno.unochoice.ChoiceParameter plugin="uno-choice@2.1">
+          <name>SERVER_TYPE</name>
+          <description>&lt;pre&gt;&lt;!-- TODO --&gt;服务器类型:
+DEV = 开发环境
+TEST = 测试环境
+DEMO = 演示环境
+PROD = 生产环境
+&lt;/pre&gt;</description>
+          <randomName>choice-parameter-28721209660367</randomName>
+          <visibleItemCount>1</visibleItemCount>
+          <script class="org.biouno.unochoice.model.GroovyScript">
+            <secureScript plugin="script-security@1.51">
+              <script>return [&apos;DEV&apos;,&apos;TEST&apos;,&apos;DEMO&apos;,&apos;PROD&apos;]</script>
+              <sandbox>false</sandbox>
+            </secureScript>
+            <secureFallbackScript plugin="script-security@1.51">
+              <script></script>
+              <sandbox>false</sandbox>
+            </secureFallbackScript>
+          </script>
+          <projectName>setup_devops-jobs</projectName>
+          <choiceType>PT_SINGLE_SELECT</choiceType>
+          <filterable>false</filterable>
+          <filterLength>1</filterLength>
+        </org.biouno.unochoice.ChoiceParameter>
+        <org.biouno.unochoice.DynamicReferenceParameter plugin="uno-choice@2.1">
+          <name></name>
+          <description></description>
+          <randomName>choice-parameter-28803697643350</randomName>
+          <visibleItemCount>1</visibleItemCount>
+          <script class="org.biouno.unochoice.model.GroovyScript">
+            <secureScript plugin="script-security@1.51">
+              <script>switch(SERVER_TYPE){
+ case~/.*DEV.*/:
+    return &quot;&lt;b&gt;构建来源(SOURCE)请输入项目workbench的git地址&lt;/b&gt;&quot;
+ break
+ default:
+    return &quot;&lt;b&gt;构建来源(SOURCE)请输入starter的docker镜像标识&lt;/b&gt;&quot;
+ break
+}</script>
+              <sandbox>false</sandbox>
+            </secureScript>
+            <secureFallbackScript plugin="script-security@1.51">
+              <script></script>
+              <sandbox>false</sandbox>
+            </secureFallbackScript>
+          </script>
+          <projectName>setup_devops-jobs</projectName>
+          <parameters class="linked-hash-map"/>
+          <referencedParameters>SERVER_TYPE</referencedParameters>
+          <choiceType>ET_FORMATTED_HTML</choiceType>
+          <omitValueField>false</omitValueField>
+        </org.biouno.unochoice.DynamicReferenceParameter>
+        <hudson.model.StringParameterDefinition>
+          <name>SOURCE</name>
+          <description>&lt;pre&gt;&lt;!-- TODO --&gt;
+构建来源
+&lt;/pre&gt;</description>
+          <defaultValue></defaultValue>
+          <trim>true</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>GIT_BRANCH</name>
+          <description>&lt;pre&gt;&lt;!-- TODO --&gt;
+workbench的git分支(SERVER_TYPE为DEV时,此参数才生效)
+&lt;/pre&gt;</description>
+          <defaultValue>origin/master</defaultValue>
+          <trim>true</trim>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+    <hudson.plugins.throttleconcurrents.ThrottleJobProperty plugin="throttle-concurrents@2.0.1">
+      <maxConcurrentPerNode>0</maxConcurrentPerNode>
+      <maxConcurrentTotal>0</maxConcurrentTotal>
+      <categories class="java.util.concurrent.CopyOnWriteArrayList"/>
+      <throttleEnabled>false</throttleEnabled>
+      <throttleOption>project</throttleOption>
+      <limitOneJobWithMatchingParams>false</limitOneJobWithMatchingParams>
+      <paramsToUseForLimit></paramsToUseForLimit>
+    </hudson.plugins.throttleconcurrents.ThrottleJobProperty>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.plugins.groovy.SystemGroovy plugin="groovy@2.1">
+      <source class="hudson.plugins.groovy.StringSystemScriptSource">
+        <script plugin="script-security@1.51">
+          <script>import jenkins.model.*;
+import hudson.model.*;
+import hudson.EnvVars;
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
+
+/************************************ Constants ************************************/
+def T_STARTER_DEPLOYMENT = &apos;template_starter-deployment&apos;;
+def T_STARTER_MAINTENANCE = &apos;template_starter-maintenance&apos;;
+def T_WORKBENCH_BUILDING = &apos;template_workbench-building&apos;;
+/************************************ Functions ************************************/
+def createFromTemplate(Jenkins jenkins, ListView jobsView, String template, String concrete){
+  if( null == jenkins || null == template || null == concrete ){
+    return;
+  }
+
+  def concreteJob = jenkins.getItemByFullName(concrete);
+
+  if( null != concreteJob ){
+    concreteJob.delete();
+  }
+
+  if( null == concreteJob ){
+    jenkins.copy(jenkins.getItemByFullName(template), concrete);
+    concreteJob = jenkins.getItemByFullName(concrete);
+    concreteJob.disable();
+    concreteJob.enable();
+  }
+
+  if( null != jobsView ){
+    jobsView.add(concreteJob);
+  }
+
+  return concreteJob;
+}
+
+/*********************************** Parameters **********************************/
+
+def name = build.buildVariables.get(&apos;NAME&apos;);
+def desc = build.buildVariables.get(&apos;DESC&apos;);
+def server = build.buildVariables.get(&apos;SERVER&apos;);
+def serverType = build.buildVariables.get(&apos;SERVER_TYPE&apos;);
+def source = build.buildVariables.get(&apos;SOURCE&apos;);
+def gitBranch = build.buildVariables.get(&apos;GIT_BRANCH&apos;);
+
+// Check the fucking parameters
+def pass = (name ==~ /[a-z0-9\-]+/);
+if (! pass) {
+  println &apos;无效项目名称:项目名称不允许为空且只允许输入半角数字/小写英文/减号(用作分隔)&apos;;
+  return 1;
+}
+
+if ( server == &apos;NONE&apos; ) {
+  println &apos;无效远端服务器:请使用[setup_remote-devops-prereq_centos]创建远端服务器配置&apos;;
+  return 1;
+}
+
+if ( null == gitBranch || &apos;&apos; == gitBranch ) {
+  gitBranch = &apos;master&apos;;
+}
+
+def view = serverType + &apos;:&apos; + name;
+def devopsId = serverType.toLowerCase() + &apos;_&apos; + name;
+
+/*
+if ( serverType == &apos;DEV&apos; ) {
+  view = &quot;$view($gitBranch)&quot;;
+  devopsId = devopsId + &apos;_&apos; + gitBranch;
+}
+*/
+
+println &apos;~~~~~~~~~~ 本次创建参数信息 ~~~~~~~~~~&apos;;
+println &quot;DevOps ID : [$devopsId]&quot;;
+println &quot;DevOps任务所在页签 : [$view]&quot;;
+println &quot;项目名称 : [$name]&quot;;
+println &quot;远端服务器 : [$server]&quot;;
+println &quot;服务器类型 : [$serverType]&quot;;
+println &quot;构建来源 : [$source]&quot;;
+if ( serverType == &apos;DEV&apos; ) {
+  println &quot;git分支 : [$gitBranch]&quot;;
+}
+
+/*********************************** Adding View *********************************/
+
+def jenkins = Jenkins.instance;
+def jobsView = jenkins.getView(view);
+/*
+if( null == jobsView ) {
+  jobsView = new ListView(view)
+  println &quot;~~~~~~~~~~ 添加页签 : [$view] ~~~~~~~~~~&quot;;
+  jenkins.addView(jobsView);
+}
+*/
+if( null != jobsView ) {
+  jenkins.deleteView(jobsView);
+}
+jobsView = new ListView(view)
+println &quot;~~~~~~~~~~ 添加页签 : [$view] ~~~~~~~~~~&quot;;
+jenkins.addView(jobsView);
+
+def jobsViewButtonList = jobsView.getColumns();
+if( jobsViewButtonList.size() &gt; 6) {
+  def newButtonList = [
+    jobsViewButtonList.get(6),
+    jobsViewButtonList.get(0),
+    jobsViewButtonList.get(2),
+    jobsViewButtonList.get(3),
+    jobsViewButtonList.get(4),
+    jobsViewButtonList.get(5)
+  ];
+  jobsView.setColumns(newButtonList);
+}
+jobsView.doSubmitDescription(
+  [getParameter: {return &quot;&lt;h3&gt;&quot; + desc + &quot;&lt;/h3&gt;&quot;;}] as StaplerRequest, 
+  [sendRedirect: {return;}] as StaplerResponse
+)
+
+/*********************************** Adding Jobs *********************************/
+
+// createFromTemplate(jenkins, jobsView, T_STARTER_DEPLOYMENT, &quot;${devopsId}_deployment&quot;);
+// def deploymentJob = jenkins.getItemByFullName(&quot;${devopsId}_deployment&quot;);
+def deploymentJob = createFromTemplate(jenkins, jobsView, T_STARTER_DEPLOYMENT, &quot;${devopsId}_deployment&quot;);
+def deploymentJobParamDefProp = deploymentJob.getProperty(ParametersDefinitionProperty.class);
+def deploymentJobDevopsIdDef = deploymentJobParamDefProp.getParameterDefinition(&apos;DEVOPS_ID&apos;);
+deploymentJobParamDefProp.parameterDefinitions.remove(deploymentJobDevopsIdDef);
+deploymentJobDevopsIdDef.setDefaultValue(devopsId);
+deploymentJobParamDefProp.parameterDefinitions.add(1,deploymentJobDevopsIdDef);
+deploymentJob.save();
+
+def maintenanceJob = createFromTemplate(jenkins, jobsView, T_STARTER_MAINTENANCE, &quot;${devopsId}_maintenance&quot;);
+def maintenanceJobParamDefProp = maintenanceJob.getProperty(ParametersDefinitionProperty.class);
+def maintenanceJobDevopsIdDef = maintenanceJobParamDefProp.getParameterDefinition(&apos;DEVOPS_ID&apos;);
+maintenanceJobParamDefProp.parameterDefinitions.remove(maintenanceJobDevopsIdDef);
+maintenanceJobDevopsIdDef.setDefaultValue(devopsId);
+maintenanceJobParamDefProp.parameterDefinitions.add(1,maintenanceJobDevopsIdDef);
+maintenanceJob.save();
+
+if ( &apos;DEV&apos;.equals(serverType) ) {
+  def buildingJob = createFromTemplate(jenkins, jobsView, T_WORKBENCH_BUILDING, &quot;${devopsId}_building&quot;);
+  def buildingJobParamDefProp = buildingJob.getProperty(ParametersDefinitionProperty.class);
+
+  // DEVOPS_ID
+  def buildingJobDevopsIdDef = buildingJobParamDefProp.getParameterDefinition(&apos;DEVOPS_ID&apos;);
+  buildingJobParamDefProp.parameterDefinitions.remove(buildingJobDevopsIdDef);
+  buildingJobDevopsIdDef.setDefaultValue(devopsId);
+  buildingJobParamDefProp.parameterDefinitions.add(0,buildingJobDevopsIdDef);
+
+  // GIT_URL
+  def buildingJobGitUrlDef = buildingJobParamDefProp.getParameterDefinition(&apos;GIT_URL&apos;);
+  buildingJobParamDefProp.parameterDefinitions.remove(buildingJobGitUrlDef);
+  buildingJobGitUrlDef.setDefaultValue(source);
+  buildingJobParamDefProp.parameterDefinitions.add(2,buildingJobGitUrlDef);
+
+  // GIT_BRANCH
+  def buildingJobGitBranchDef = buildingJobParamDefProp.getParameterDefinition(&apos;GIT_BRANCH&apos;);
+  buildingJobParamDefProp.parameterDefinitions.remove(buildingJobGitBranchDef);
+  buildingJobGitBranchDef.setDefaultValue(gitBranch);
+  buildingJobParamDefProp.parameterDefinitions.add(3,buildingJobGitBranchDef);
+
+  buildingJob.save();
+}
+
+/************************************** Env-Var ************************************/
+
+def vars = [DEVOPS_ID: devopsId];
+build.environments.add(0, Environment.create(new EnvVars(vars)));
+
+jenkins.save();</script>
+          <sandbox>false</sandbox>
+        </script>
+      </source>
+    </hudson.plugins.groovy.SystemGroovy>
+    <hudson.tasks.Shell>
+      <command>#!/usr/bin/env bash
+
+if [ &quot;${SERVER_TYPE}&quot; == &quot;DEV&quot; ]; then
+  rm -rf &quot;${DEVOPS_ID}&quot;
+  mkdir -p &quot;${DEVOPS_ID}&quot;
+  git clone &quot;${SOURCE}&quot; &quot;${DEVOPS_ID}&quot; || exit 1
+  DIR=&quot;$(pwd)&quot;
+  cd &quot;${DEVOPS_ID}&quot;
+  git checkout &quot;${GIT_BRANCH}&quot;
+  echo &quot;$(cat .settings|grep REGISTRY|awk -F&apos;=&apos; &apos;{print $2}&apos;)$(cat .name):$(cat .version)&quot; &gt; &quot;${DIR}/${DEVOPS_ID}.tag&quot;
+  cd &quot;${DIR}&quot;
+else
+  echo &quot;${SOURCE}&quot; &gt; &quot;${DEVOPS_ID}.tag&quot;
+fi</command>
+    </hudson.tasks.Shell>
+    <hudson.plugins.groovy.SystemGroovy plugin="groovy@2.1">
+      <source class="hudson.plugins.groovy.StringSystemScriptSource">
+        <script plugin="script-security@1.51">
+          <script>import jenkins.model.*;
+import hudson.*;
+import hudson.model.*;
+
+def gitUrl = null;
+def serverType = build.buildVariables.get(&apos;SERVER_TYPE&apos;);
+if ( &apos;DEV&apos;.equals(serverType) ) {
+  gitUrl = build.buildVariables.get(&apos;SOURCE&apos;);
+}
+def starter_tag = new File(&quot;${ build.getEnvVars()[&quot;WORKSPACE&quot;]}/${ build.getEnvVars()[&quot;DEVOPS_ID&quot;]}.tag&quot;).text;
+def vars = [GIT_URL:gitUrl.trim(), STARTER_TAG:starter_tag.trim()];
+build.environments.add(0, Environment.create(new EnvVars(vars)));
+
+def jenkins = Jenkins.instance;
+def devopsId = build.getEnvironment(listener).get(&apos;DEVOPS_ID&apos;);
+def server = build.buildVariables.get(&apos;SERVER&apos;);
+
+/*
+def buildingJob = jenkins.getItemByFullName(&quot;${devopsId}_building&quot;);
+def buildingJobParamDefProp = buildingJob.getProperty(ParametersDefinitionProperty.class);
+*/
+
+def deploymentJob = jenkins.getItemByFullName(&quot;${devopsId}_deployment&quot;);
+def deploymentJobParamDefProp = deploymentJob.getProperty(ParametersDefinitionProperty.class);
+
+def deploymentJobStarterTagDef = deploymentJobParamDefProp.getParameterDefinition(&apos;STARTER_TAG&apos;);
+deploymentJobParamDefProp.parameterDefinitions.remove(deploymentJobStarterTagDef);
+deploymentJobStarterTagDef.setDefaultValue(starter_tag);
+deploymentJobParamDefProp.parameterDefinitions.add(4,deploymentJobStarterTagDef);
+
+def deploymentJobServerDef = deploymentJobParamDefProp.getParameterDefinition(&apos;SERVER&apos;);
+deploymentJobParamDefProp.parameterDefinitions.remove(deploymentJobServerDef);
+deploymentJobServerDef.setDefaultValue(server);
+deploymentJobParamDefProp.parameterDefinitions.add(0,deploymentJobServerDef);
+deploymentJob.save();
+
+def maintenanceJob = jenkins.getItemByFullName(&quot;${devopsId}_maintenance&quot;);
+def maintenanceJobParamDefProp = maintenanceJob.getProperty(ParametersDefinitionProperty.class);
+
+def maintenanceJobServerDef = maintenanceJobParamDefProp.getParameterDefinition(&apos;SERVER&apos;);
+maintenanceJobParamDefProp.parameterDefinitions.remove(maintenanceJobServerDef);
+maintenanceJobServerDef.setDefaultValue(server);
+maintenanceJobParamDefProp.parameterDefinitions.add(0,maintenanceJobServerDef);
+maintenanceJob.save();
+
+jenkins.save();</script>
+          <sandbox>false</sandbox>
+        </script>
+      </source>
+    </hudson.plugins.groovy.SystemGroovy>
+    <hudson.plugins.parameterizedtrigger.TriggerBuilder plugin="parameterized-trigger@2.35.2">
+      <configs>
+        <hudson.plugins.parameterizedtrigger.BlockableBuildTriggerConfig>
+          <configs>
+            <hudson.plugins.parameterizedtrigger.PredefinedBuildParameters>
+              <properties>DEVOPS_ID=${DEVOPS_ID}</properties>
+              <textParamValueOnNewLine>false</textParamValueOnNewLine>
+            </hudson.plugins.parameterizedtrigger.PredefinedBuildParameters>
+          </configs>
+          <projects>init_workbench-building</projects>
+          <condition>ALWAYS</condition>
+          <triggerWithNoParameters>false</triggerWithNoParameters>
+          <triggerFromChildProjects>false</triggerFromChildProjects>
+          <block>
+            <buildStepFailureThreshold>
+              <name>FAILURE</name>
+              <ordinal>2</ordinal>
+              <color>RED</color>
+              <completeBuild>true</completeBuild>
+            </buildStepFailureThreshold>
+            <unstableThreshold>
+              <name>UNSTABLE</name>
+              <ordinal>1</ordinal>
+              <color>YELLOW</color>
+              <completeBuild>true</completeBuild>
+            </unstableThreshold>
+            <failureThreshold>
+              <name>FAILURE</name>
+              <ordinal>2</ordinal>
+              <color>RED</color>
+              <completeBuild>true</completeBuild>
+            </failureThreshold>
+          </block>
+          <buildAllNodesWithLabel>false</buildAllNodesWithLabel>
+        </hudson.plugins.parameterizedtrigger.BlockableBuildTriggerConfig>
+      </configs>
+    </hudson.plugins.parameterizedtrigger.TriggerBuilder>
+    <hudson.plugins.parameterizedtrigger.TriggerBuilder plugin="parameterized-trigger@2.35.2">
+      <configs>
+        <hudson.plugins.parameterizedtrigger.BlockableBuildTriggerConfig>
+          <configs>
+            <hudson.plugins.parameterizedtrigger.PredefinedBuildParameters>
+              <properties>SERVER=${SERVER}
+DEVOPS_ID=${DEVOPS_ID}
+STARTER_TAG=${STARTER_TAG}</properties>
+              <textParamValueOnNewLine>false</textParamValueOnNewLine>
+            </hudson.plugins.parameterizedtrigger.PredefinedBuildParameters>
+          </configs>
+          <projects>init_starter-deployment</projects>
+          <condition>ALWAYS</condition>
+          <triggerWithNoParameters>false</triggerWithNoParameters>
+          <triggerFromChildProjects>false</triggerFromChildProjects>
+          <block>
+            <buildStepFailureThreshold>
+              <name>FAILURE</name>
+              <ordinal>2</ordinal>
+              <color>RED</color>
+              <completeBuild>true</completeBuild>
+            </buildStepFailureThreshold>
+            <unstableThreshold>
+              <name>UNSTABLE</name>
+              <ordinal>1</ordinal>
+              <color>YELLOW</color>
+              <completeBuild>true</completeBuild>
+            </unstableThreshold>
+            <failureThreshold>
+              <name>FAILURE</name>
+              <ordinal>2</ordinal>
+              <color>RED</color>
+              <completeBuild>true</completeBuild>
+            </failureThreshold>
+          </block>
+          <buildAllNodesWithLabel>false</buildAllNodesWithLabel>
+        </hudson.plugins.parameterizedtrigger.BlockableBuildTriggerConfig>
+      </configs>
+    </hudson.plugins.parameterizedtrigger.TriggerBuilder>
+    <hudson.plugins.parameterizedtrigger.TriggerBuilder plugin="parameterized-trigger@2.35.2">
+      <configs>
+        <hudson.plugins.parameterizedtrigger.BlockableBuildTriggerConfig>
+          <configs>
+            <hudson.plugins.parameterizedtrigger.PredefinedBuildParameters>
+              <properties>SERVER=${SERVER}
+DEVOPS_ID=${DEVOPS_ID}</properties>
+              <textParamValueOnNewLine>false</textParamValueOnNewLine>
+            </hudson.plugins.parameterizedtrigger.PredefinedBuildParameters>
+          </configs>
+          <projects>init_starter-maintenance</projects>
+          <condition>ALWAYS</condition>
+          <triggerWithNoParameters>false</triggerWithNoParameters>
+          <triggerFromChildProjects>false</triggerFromChildProjects>
+          <block>
+            <buildStepFailureThreshold>
+              <name>FAILURE</name>
+              <ordinal>2</ordinal>
+              <color>RED</color>
+              <completeBuild>true</completeBuild>
+            </buildStepFailureThreshold>
+            <unstableThreshold>
+              <name>UNSTABLE</name>
+              <ordinal>1</ordinal>
+              <color>YELLOW</color>
+              <completeBuild>true</completeBuild>
+            </unstableThreshold>
+            <failureThreshold>
+              <name>FAILURE</name>
+              <ordinal>2</ordinal>
+              <color>RED</color>
+              <completeBuild>true</completeBuild>
+            </failureThreshold>
+          </block>
+          <buildAllNodesWithLabel>false</buildAllNodesWithLabel>
+        </hudson.plugins.parameterizedtrigger.BlockableBuildTriggerConfig>
+      </configs>
+    </hudson.plugins.parameterizedtrigger.TriggerBuilder>
+    <hudson.plugins.parameterizedtrigger.TriggerBuilder plugin="parameterized-trigger@2.35.2">
+      <configs>
+        <hudson.plugins.parameterizedtrigger.BlockableBuildTriggerConfig>
+          <configs>
+            <hudson.plugins.parameterizedtrigger.PredefinedBuildParameters>
+              <properties>DEVOPS_ID=${DEVOPS_ID}
+STARTER_TAG=${STARTER_TAG}
+GIT_URL=${GIT_URL}
+GIT_BRANCH=${GIT_BRANCH}</properties>
+              <textParamValueOnNewLine>false</textParamValueOnNewLine>
+            </hudson.plugins.parameterizedtrigger.PredefinedBuildParameters>
+          </configs>
+          <projects>init_mods-dropdown</projects>
+          <condition>ALWAYS</condition>
+          <triggerWithNoParameters>false</triggerWithNoParameters>
+          <triggerFromChildProjects>false</triggerFromChildProjects>
+          <block>
+            <buildStepFailureThreshold>
+              <name>FAILURE</name>
+              <ordinal>2</ordinal>
+              <color>RED</color>
+              <completeBuild>true</completeBuild>
+            </buildStepFailureThreshold>
+            <unstableThreshold>
+              <name>UNSTABLE</name>
+              <ordinal>1</ordinal>
+              <color>YELLOW</color>
+              <completeBuild>true</completeBuild>
+            </unstableThreshold>
+            <failureThreshold>
+              <name>FAILURE</name>
+              <ordinal>2</ordinal>
+              <color>RED</color>
+              <completeBuild>true</completeBuild>
+            </failureThreshold>
+          </block>
+          <buildAllNodesWithLabel>false</buildAllNodesWithLabel>
+        </hudson.plugins.parameterizedtrigger.BlockableBuildTriggerConfig>
+      </configs>
+    </hudson.plugins.parameterizedtrigger.TriggerBuilder>
+  </builders>
+  <publishers/>
+  <buildWrappers>
+    <hudson.plugins.ws__cleanup.PreBuildCleanup plugin="ws-cleanup@0.37">
+      <deleteDirs>false</deleteDirs>
+      <cleanupParameter></cleanupParameter>
+      <externalDelete></externalDelete>
+      <disableDeferredWipeout>false</disableDeferredWipeout>
+    </hudson.plugins.ws__cleanup.PreBuildCleanup>
+    <hudson.plugins.timestamper.TimestamperBuildWrapper plugin="timestamper@1.9"/>
+  </buildWrappers>
+</project>

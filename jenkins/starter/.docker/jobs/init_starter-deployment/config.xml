@@ -1,0 +1,173 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description>&lt;pre&gt;&#xd;
+&lt;b&gt;&lt;font color=&quot;red&quot;&gt;WARNING:This is a downstream job, do NOT perform this job manually!&lt;/font&gt;&lt;/b&gt;&#xd;
+&lt;/pre&gt;</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>SERVER</name>
+          <description></description>
+          <defaultValue></defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>DEVOPS_ID</name>
+          <description></description>
+          <defaultValue></defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>STARTER_TAG</name>
+          <description></description>
+          <defaultValue></defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+    <hudson.plugins.throttleconcurrents.ThrottleJobProperty plugin="throttle-concurrents@2.0.1">
+      <maxConcurrentPerNode>1</maxConcurrentPerNode>
+      <maxConcurrentTotal>1</maxConcurrentTotal>
+      <categories class="java.util.concurrent.CopyOnWriteArrayList"/>
+      <throttleEnabled>true</throttleEnabled>
+      <throttleOption>project</throttleOption>
+      <limitOneJobWithMatchingParams>false</limitOneJobWithMatchingParams>
+      <paramsToUseForLimit></paramsToUseForLimit>
+    </hudson.plugins.throttleconcurrents.ThrottleJobProperty>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.plugins.groovy.SystemGroovy plugin="groovy@2.1">
+      <source class="hudson.plugins.groovy.StringSystemScriptSource">
+        <script plugin="script-security@1.51">
+          <script>import jenkins.model.*;
+import hudson.model.*;
+import hudson.EnvVars;
+import jenkins.plugins.publish_over_ssh.*;
+
+def jenkins = Jenkins.instance;
+def server = build.buildVariables.get(&apos;SERVER&apos;);
+def keyPath;
+
+jenkins.getDescriptorByType(BapSshPublisherPlugin.Descriptor.class).with {
+  descriptor -&gt;
+  descriptor.hostConfigurations.each{
+    config -&gt; 
+    if( config.name == &quot;$server&quot; ){
+      keyPath = config.keyInfo.keyPath;
+    }
+  }
+}
+
+def vars = [KEY_PATH: keyPath]
+build.environments.add(0, Environment.create(new EnvVars(vars)))</script>
+          <sandbox>false</sandbox>
+        </script>
+      </source>
+    </hudson.plugins.groovy.SystemGroovy>
+    <hudson.tasks.Shell>
+      <command>#!/usr/bin/env bash
+
+echo &quot;SERVER=[${SERVER}]&quot;
+echo &quot;KEY_PATH=[${KEY_PATH}]&quot;
+echo &quot;DEVOPS_ID=[${DEVOPS_ID}]&quot;
+echo &quot;STARTER_TAG=[${STARTER_TAG}]&quot;
+echo &quot;=============&quot;
+
+#ssh -o StrictHostKeyChecking=no -i ${KEY_PATH} $SERVER mkdir -p &quot;~/${DEVOPS_ID}&quot;
+#ssh -o StrictHostKeyChecking=no -i ${KEY_PATH} $SERVER ls -al
+#echo &quot;=============&quot;
+
+DIR=&quot;$(pwd)&quot;
+#mkdir -p &quot;${DEVOPS_ID}&quot;
+test -n &quot;$(docker images -q -f dangling=true)&quot; &amp;&amp; docker rmi $(docker images -q -f dangling=true)
+docker pull &quot;${STARTER_TAG}&quot;
+STARTER_CID=&quot;$(docker run --rm -td ${STARTER_TAG} ash)&quot;
+docker cp &quot;${STARTER_CID}:/app-starter&quot; &quot;${WORKSPACE}&quot;
+rm -rf &quot;${WORKSPACE}/${DEVOPS_ID}&quot;
+mv &quot;${WORKSPACE}/app-starter&quot; &quot;${WORKSPACE}/${DEVOPS_ID}&quot;
+docker stop &quot;${STARTER_CID}&quot;
+test -n &quot;$(docker images -q -f dangling=true)&quot; &amp;&amp; docker rmi $(docker images -q -f dangling=true)
+
+echo &quot;=============&quot;
+
+if [ -d &quot;${WORKSPACE}/${DEVOPS_ID}&quot; ]; then
+  ## settings
+  echo &quot;/home/jenkins/.config/${DEVOPS_ID}/settings&quot; &gt; &quot;${WORKSPACE}/${DEVOPS_ID}.configs&quot;
+  cat &quot;${WORKSPACE}/${DEVOPS_ID}/settings&quot; &gt;&gt; &quot;${WORKSPACE}/${DEVOPS_ID}.configs&quot;
+  echo &quot;==============================&quot; &gt;&gt; &quot;${WORKSPACE}/${DEVOPS_ID}.configs&quot;
+  
+  ## config/*.cfg
+  for cfg in &quot;${WORKSPACE}/${DEVOPS_ID}/config/&quot;*.cfg; do
+    echo &quot;/home/jenkins/.config/${DEVOPS_ID}/config/$(basename $cfg)&quot; &gt;&gt; &quot;${WORKSPACE}/${DEVOPS_ID}.configs&quot;
+    cat &quot;$cfg&quot; &gt;&gt; &quot;${WORKSPACE}/${DEVOPS_ID}.configs&quot;
+    echo &quot;==============================&quot; &gt;&gt; &quot;${WORKSPACE}/${DEVOPS_ID}.configs&quot;
+  done
+  
+  ## deployment/*.yaml
+  #for yaml in &quot;${WORKSPACE}/${DEVOPS_ID}/deployment/&quot;*.yaml; do
+  #  echo &quot;/home/jenkins/.config/${DEVOPS_ID}/deployment/$(basename $yaml)&quot; &gt;&gt; &quot;${WORKSPACE}/${DEVOPS_ID}.configs&quot;
+  #  cat &quot;$yaml&quot; &gt;&gt; &quot;${WORKSPACE}/${DEVOPS_ID}.configs&quot;
+  #  echo &quot;==============================&quot; &gt;&gt; &quot;${WORKSPACE}/${DEVOPS_ID}.configs&quot;
+  #done
+else
+  touch &quot;${WORKSPACE}/${DEVOPS_ID}.configs&quot;
+fi</command>
+    </hudson.tasks.Shell>
+    <hudson.plugins.groovy.SystemGroovy plugin="groovy@2.1">
+      <source class="hudson.plugins.groovy.StringSystemScriptSource">
+        <script plugin="script-security@1.51">
+          <script>import jenkins.model.*;
+import hudson.*;
+import hudson.model.*;
+
+def devopsId = build.getEnvironment(listener).get(&apos;DEVOPS_ID&apos;);
+def configsContent = new File(&quot;${build.getEnvVars()[&quot;WORKSPACE&quot;]}/${devopsId}.configs&quot;).text;
+
+def jenkins = Jenkins.instance;
+def job = jenkins.getItemByFullName(&quot;${devopsId}_deployment&quot;);
+def paramDefProp = job.getProperty(ParametersDefinitionProperty.class);
+
+def configsDef = paramDefProp.getParameterDefinition(&apos;CONFIGS&apos;);
+paramDefProp.parameterDefinitions.remove(configsDef);
+configsDef.setDefaultValue(configsContent.trim());
+paramDefProp.parameterDefinitions.add(configsDef);
+
+/*
+def mods = [&apos;ALL&apos;,&apos;UPDATED&apos;]
+def ws=job.workspace
+File modsFile = new File(&quot;${build.getEnvVars()[&quot;WORKSPACE&quot;]}/${devopsId}/mods&quot;)
+if(modsFile.exists()){
+  modsFile.readLines().each{
+    if(it.split(&apos; &apos;)[0].length()&gt;0){
+      mods.add(it.split(&apos; &apos;)[0])
+    }
+  }
+}
+
+def modsDef = paramDefProp.getParameterDefinition(&apos;MODS&apos;)
+paramDefProp.parameterDefinitions.remove(modsDef);
+modsDef.setChoices(mods);
+paramDefProp.parameterDefinitions.add(5,modsDef);
+*/
+
+job.save();
+
+jenkins.save();</script>
+          <sandbox>false</sandbox>
+        </script>
+      </source>
+    </hudson.plugins.groovy.SystemGroovy>
+  </builders>
+  <publishers/>
+  <buildWrappers/>
+</project>

@@ -1,0 +1,216 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description>&lt;pre&gt;&#xd;
+&lt;b&gt;&lt;font color=&quot;red&quot;&gt;WARNING:This is a downstream job, do NOT perform this job manually!&lt;/font&gt;&lt;/b&gt;&#xd;
+&lt;/pre&gt;</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>DEVOPS_ID</name>
+          <description></description>
+          <defaultValue></defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>STARTER_TAG</name>
+          <description></description>
+          <defaultValue></defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>GIT_URL</name>
+          <description></description>
+          <defaultValue></defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>GIT_BRANCH</name>
+          <description></description>
+          <defaultValue></defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+    <hudson.plugins.throttleconcurrents.ThrottleJobProperty plugin="throttle-concurrents@2.0.1">
+      <maxConcurrentPerNode>1</maxConcurrentPerNode>
+      <maxConcurrentTotal>1</maxConcurrentTotal>
+      <categories class="java.util.concurrent.CopyOnWriteArrayList"/>
+      <throttleEnabled>true</throttleEnabled>
+      <throttleOption>project</throttleOption>
+      <limitOneJobWithMatchingParams>false</limitOneJobWithMatchingParams>
+      <paramsToUseForLimit></paramsToUseForLimit>
+    </hudson.plugins.throttleconcurrents.ThrottleJobProperty>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>#!/usr/bin/env bash
+
+if [ -z &quot;${DEVOPS_ID}&quot; ]; then
+  echo &quot;DEVOPS_ID is required!&quot;
+  exit 1;
+fi
+
+## ${DEVOPS_ID}_repo
+if [ -n &quot;${GIT_URL}&quot; ]; then
+  set -e
+  git clone ${GIT_URL} &quot;${DEVOPS_ID}_repo&quot;
+  DIR=&quot;$(pwd)&quot;
+  cd &quot;${DEVOPS_ID}_repo&quot;
+  git checkout ${GIT_BRANCH:-&quot;origin/master&quot;}
+  [ -x mods.sh ] &amp;&amp; ./mods.sh
+  cd &quot;${DIR}&quot;
+  set +e
+fi
+
+## ${DEVOPS_ID}_starter
+if [ -n &quot;${STARTER_TAG}&quot; ]; then
+  set -e
+  docker pull &quot;${STARTER_TAG}&quot; || exit 0
+  STARTER_CID=&quot;$(docker run --rm -td ${STARTER_TAG} ash)&quot;
+  docker cp &quot;${STARTER_CID}:/app-starter&quot; &quot;${WORKSPACE}&quot;
+  rm -rf &quot;${WORKSPACE}/${DEVOPS_ID}_starter&quot;
+  mv &quot;${WORKSPACE}/app-starter&quot; &quot;${WORKSPACE}/${DEVOPS_ID}_starter&quot;
+  docker stop &quot;${STARTER_CID}&quot;
+  set +e
+fi</command>
+    </hudson.tasks.Shell>
+    <hudson.plugins.groovy.SystemGroovy plugin="groovy@2.1">
+      <source class="hudson.plugins.groovy.StringSystemScriptSource">
+        <script plugin="script-security@1.51">
+          <script>import jenkins.model.*;
+import hudson.*;
+import hudson.model.*;
+
+import jenkins.model.*;
+import hudson.*;
+import hudson.model.*;
+
+def setModsDefaultValue(jenkins, jobName, modsFilePath, paramIdx){
+  if( null == jenkins || null == jobName || null == modsFilePath || null == paramIdx ){
+    println &apos;Invalid parameters&apos;;
+    return;
+  }
+  
+  def job = jenkins.getItemByFullName(jobName);
+  if( null == job ) {
+    println &quot;Invalid job[${jobName}]&quot;;
+    return;
+  }
+  
+  File modsFile = new File(modsFilePath);
+  if(!modsFile.exists()){
+    println &quot;File[modsFilePath] does NOT exist!&quot;;
+    return;
+  }
+  
+  def mods = [&apos;ALL&apos;,&apos;UPDATED&apos;];
+  modsFile.readLines().each{
+    if(it.split(&apos; &apos;)[0].length()&gt;0){
+      mods.add(it.split(&apos; &apos;)[0]);
+    }
+  }
+  
+  def paramDefProp = job.getProperty(ParametersDefinitionProperty.class)
+  def modsParamDef = paramDefProp.getParameterDefinition(&apos;MODS&apos;)
+  paramDefProp.parameterDefinitions.remove(modsParamDef);
+  modsParamDef.setChoices(mods);
+  paramDefProp.parameterDefinitions.add(paramIdx,modsParamDef);
+  
+  job.save();
+  jenkins.save();
+}
+
+def devopsId = build.buildVariables.get(&apos;DEVOPS_ID&apos;);
+def starterTag = build.buildVariables.get(&apos;STARTER_TAG&apos;);
+def gitUrl = build.buildVariables.get(&apos;GIT_URL&apos;);
+def gitBranch = build.buildVariables.get(&apos;GIT_BRANCH&apos;);
+
+// File repoDir = new File(&quot;${build.parent.workspace}/${devopsId}_repo&quot;);
+// File starterDir = new File(&quot;${build.parent.workspace}/${devopsId}_starter&quot;);
+
+println &apos;====================&apos;;
+println &quot;DEVOPS_ID = [${devopsId}]&quot;;
+println &quot;STARTER_TAG = [${starterTag}]&quot;;
+println &quot;GIT_URL = [${gitUrl}]&quot;;
+println &quot;GIT_BRANCH = [${gitBranch}]&quot;;
+// println &quot;[${repoDir}]:${repoDir.exists()}&quot;;
+// println &quot;[${starterDir}]:${starterDir.exists()}&quot;;
+println &apos;====================&apos;;
+
+def jenkins = Jenkins.instance;
+
+println &quot;Init [MODS] dropdown box of [${devopsId}_building]&quot;;
+setModsDefaultValue(jenkins, &quot;${devopsId}_building&quot;, &quot;${build.parent.workspace}/${devopsId}_repo/dist/mods&quot;, 5);
+
+println &quot;Init [MODS] dropdown box of [${devopsId}_deployment]&quot;;
+setModsDefaultValue(jenkins, &quot;${devopsId}_deployment&quot;, &quot;${build.parent.workspace}/${devopsId}_starter/mods&quot;, 5);
+
+println &quot;Init [MODS] dropdown box of [${devopsId}_maintenance]&quot;;
+setModsDefaultValue(jenkins, &quot;${devopsId}_maintenance&quot;, &quot;${build.parent.workspace}/${devopsId}_starter/mods&quot;, 3);
+
+/*
+if(repoDir.exists()){
+  println &quot;Init [MODS] dropdown box of [${devopsId}_building]&quot;;
+  def repoMods = [&apos;ALL&apos;,&apos;UPDATED&apos;];
+  def buildingJob = jenkins.getItemByFullName(&quot;${devopsId}_building&quot;);
+  if( null != buildingJob ) {
+    File repoModsFile = new File(&quot;${buildingJob.workspace}/dist/mods&quot;);
+    if(repoModsFile.exists()){
+      repoModsFile.readLines().each{
+        if(it.split(&apos; &apos;)[0].length()&gt;0){
+          repoMods.add(it.split(&apos; &apos;)[0]);
+        }
+      }
+    }
+    def buildingJobParamDefProp = buildingJob.getProperty(ParametersDefinitionProperty.class)
+    def buildingJobModsParamDef = buildingJobParamDefProp.getParameterDefinition(&apos;MODS&apos;)
+    buildingJobParamDefProp.parameterDefinitions.remove(buildingJobModsParamDef);
+    buildingJobModsParamDef.setChoices(repoMods);
+    buildingJobParamDefProp.parameterDefinitions.add(5,buildingJobModsParamDef);
+
+    buildingJob.save()
+  }
+}
+*/
+
+/*
+if(starterDir.exists()){
+  def deploymentJob = jenkins.getItemByFullName(&quot;${devopsId}_deployment&quot;);
+  if( null != deploymentJob ) {
+    println &quot;TODO:Init [MODS] dropdown box of [${devopsId}_deployment]&quot;;
+    File modsFile = new File(&quot;${buildingJob.workspace}/dist/mods&quot;);
+  }
+
+  def maintenanceJob = jenkins.getItemByFullName(&quot;${devopsId}_maintenance&quot;);
+  if( null != maintenanceJob ) {
+    println &quot;TODO:Init [MODS] dropdown box of [${devopsId}_maintenance]&quot;;
+  }
+}
+
+jenkins.save();
+*/</script>
+          <sandbox>false</sandbox>
+        </script>
+      </source>
+    </hudson.plugins.groovy.SystemGroovy>
+  </builders>
+  <publishers/>
+  <buildWrappers>
+    <hudson.plugins.ws__cleanup.PreBuildCleanup plugin="ws-cleanup@0.37">
+      <deleteDirs>false</deleteDirs>
+      <cleanupParameter></cleanupParameter>
+      <externalDelete></externalDelete>
+      <disableDeferredWipeout>false</disableDeferredWipeout>
+    </hudson.plugins.ws__cleanup.PreBuildCleanup>
+  </buildWrappers>
+</project>

@@ -20,14 +20,6 @@ if [ -z "$cmd" ]; then
   systemctl start docker
   echo '======= docker-ce is now installed ======='
   
-  ## /etc/docker/daemon.json
-  if [ -n "$1" ]; then
-    echo '===== creating /etc/docker/daemon.json ====='
-    test -f "/etc/docker/daemon.json" && mv "/etc/docker/daemon.json" "/etc/docker/daemon.json.bak.$(date +%Y%m%d%H%M%S)"
-    echo "{\"insecure-registries\":[\"$1\"]}" | sudo tee "/etc/docker/daemon.json"
-    systemctl restart docker.service
-    echo '==== /etc/docker/daemon.json is created ===='
-  fi
 else
   echo "====== docker is already installed ======="
   docker -v
@@ -45,3 +37,12 @@ else
   docker-compose -v
 fi
 
+## /etc/docker/daemon.json
+echo "Given reigistry is [$1]"
+if [ -n "$1" ]; then
+  echo '===== Creating /etc/docker/daemon.json ====='
+  test -f "/etc/docker/daemon.json" && mv "/etc/docker/daemon.json" "/etc/docker/daemon.json.bak.$(date +%Y%m%d%H%M%S)"
+  echo "{\"insecure-registries\":[\"$1\"]}" | sudo tee "/etc/docker/daemon.json"
+  systemctl restart docker.service
+  echo '==== /etc/docker/daemon.json is created ===='
+fi

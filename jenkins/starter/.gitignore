@@ -1,0 +1,13 @@
+.backup/
+.ssh/
+.m2/
+.dns
+
+.docker/*
+!.docker/jobs
+.docker/jobs/dev_*
+.docker/jobs/test_*
+.docker/jobs/demo_*
+.docker/jobs/prod_*
+.docker/jobs/*/*
+!.docker/jobs/*/config.xml

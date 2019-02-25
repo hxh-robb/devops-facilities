@@ -29,9 +29,12 @@ test ! -d ".docker/jobs" && (test -n "$(ls jobs.tar.gz* 2>/dev/null)" && cat job
 
 [ -s .dns ] && dns="--dns $(cat .dns)"
 
+echo "dns=[${dns}]"
+
 #  -v "$(pwd)/jenkins.id_rsa:/root/.ssh/id_rsa" \
 #  -v "$(pwd)/ssh.config:/root/.ssh/config" \
 #  --rm \
+docker pull robbtsang/jenkins-with-docker:latest
 docker run --name "$NAME" -d \
   -p "$PORT1:8080" \
   -p "$PORT2:50000" \

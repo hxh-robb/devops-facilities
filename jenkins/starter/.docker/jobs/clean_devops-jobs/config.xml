@@ -1,0 +1,80 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description>&lt;pre&gt;&#xd;
+&lt;b&gt;&lt;font color=&quot;red&quot;&gt;WARNING:Do NOT perform this job manually!&lt;/font&gt;&lt;/b&gt;&#xd;
+&lt;/pre&gt;</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>DEVOPS_ID</name>
+          <description></description>
+          <defaultValue></defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>VIEW_NAME</name>
+          <description></description>
+          <defaultValue></defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+    <hudson.plugins.throttleconcurrents.ThrottleJobProperty plugin="throttle-concurrents@2.0.1">
+      <maxConcurrentPerNode>0</maxConcurrentPerNode>
+      <maxConcurrentTotal>0</maxConcurrentTotal>
+      <categories class="java.util.concurrent.CopyOnWriteArrayList"/>
+      <throttleEnabled>false</throttleEnabled>
+      <throttleOption>project</throttleOption>
+      <limitOneJobWithMatchingParams>false</limitOneJobWithMatchingParams>
+      <paramsToUseForLimit></paramsToUseForLimit>
+      <configVersion>1</configVersion>
+    </hudson.plugins.throttleconcurrents.ThrottleJobProperty>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>true</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.plugins.groovy.SystemGroovy plugin="groovy@2.1">
+      <source class="hudson.plugins.groovy.StringSystemScriptSource">
+        <script plugin="script-security@1.51">
+          <script>import jenkins.model.*;
+
+def jenkins = Jenkins.instance;
+
+def devopsId = build.buildVariables.get(&apos;DEVOPS_ID&apos;);
+def viewName = build.buildVariables.get(&apos;VIEW_NAME&apos;);
+
+def buildingJob = jenkins.getItemByFullName(&quot;${devopsId}_building&quot;);
+if( null != buildingJob ){
+  buildingJob.delete();
+}
+
+def deploymentJob = jenkins.getItemByFullName(&quot;${devopsId}_deployment&quot;);
+if( null != deploymentJob ){
+  deploymentJob.delete();
+}
+
+def maintenanceJob = jenkins.getItemByFullName(&quot;${devopsId}_maintenance&quot;);
+if( null != maintenanceJob ){
+  maintenanceJob.delete();
+}
+
+def view = jenkins.getView(&apos;DEV:lxforeign&apos;);
+if( null != view ) {
+  jenkins.deleteView(view);
+}</script>
+          <sandbox>false</sandbox>
+        </script>
+      </source>
+    </hudson.plugins.groovy.SystemGroovy>
+  </builders>
+  <publishers/>
+  <buildWrappers/>
+</project>

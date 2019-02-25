@@ -1,0 +1,86 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description>&lt;pre&gt;&#xd;
+&lt;b&gt;&lt;font color=&quot;red&quot;&gt;WARNING:This is a downstream job, do NOT perform this job manually!&lt;/font&gt;&lt;/b&gt;&#xd;
+&lt;/pre&gt;</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>SERVER</name>
+          <description></description>
+          <defaultValue></defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>DEVOPS_ID</name>
+          <description></description>
+          <defaultValue></defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+    <hudson.plugins.throttleconcurrents.ThrottleJobProperty plugin="throttle-concurrents@2.0.1">
+      <maxConcurrentPerNode>1</maxConcurrentPerNode>
+      <maxConcurrentTotal>1</maxConcurrentTotal>
+      <categories class="java.util.concurrent.CopyOnWriteArrayList"/>
+      <throttleEnabled>true</throttleEnabled>
+      <throttleOption>project</throttleOption>
+      <limitOneJobWithMatchingParams>false</limitOneJobWithMatchingParams>
+      <paramsToUseForLimit></paramsToUseForLimit>
+    </hudson.plugins.throttleconcurrents.ThrottleJobProperty>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.plugins.groovy.SystemGroovy plugin="groovy@2.1">
+      <source class="hudson.plugins.groovy.StringSystemScriptSource">
+        <script plugin="script-security@1.51">
+          <script>import jenkins.model.*;
+import hudson.model.*;
+import hudson.EnvVars;
+import jenkins.plugins.publish_over_ssh.*;
+
+def jenkins = Jenkins.instance;
+def server = build.buildVariables.get(&apos;SERVER&apos;);
+def keyPath;
+
+jenkins.getDescriptorByType(BapSshPublisherPlugin.Descriptor.class).with {
+  descriptor -&gt;
+  descriptor.hostConfigurations.each{
+    config -&gt; 
+    if( config.name == &quot;$server&quot; ){
+      keyPath = config.keyInfo.keyPath;
+    }
+  }
+}
+
+def vars = [KEY_PATH: keyPath]
+build.environments.add(0, Environment.create(new EnvVars(vars)))</script>
+          <sandbox>false</sandbox>
+        </script>
+      </source>
+    </hudson.plugins.groovy.SystemGroovy>
+    <hudson.tasks.Shell>
+      <command>#!/usr/bin/env bash
+
+echo &quot;SERVER=[${SERVER}]&quot;
+echo &quot;KEY_PATH=[${KEY_PATH}]&quot;
+echo &quot;DEVOPS_ID=[${DEVOPS_ID}]&quot;
+echo &quot;=============&quot;
+
+#ssh -o StrictHostKeyChecking=no -i ${KEY_PATH} $SERVER mkdir -p &quot;~/${DEVOPS_ID}&quot;
+#ssh -o StrictHostKeyChecking=no -i ${KEY_PATH} $SERVER ls -al
+#echo &quot;=============&quot;</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers/>
+  <buildWrappers/>
+</project>

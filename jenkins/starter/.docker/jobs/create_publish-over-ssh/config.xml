@@ -1,0 +1,126 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description>&lt;pre&gt;&#xd;
+Programmatically add a publish-over-ssh configuration&#xd;
+&#xd;
+&lt;b&gt;&lt;font color=&quot;red&quot;&gt;WARNING:This is a downstream job, do NOT perform this job manually!&lt;/font&gt;&lt;/b&gt;&#xd;
+&lt;/pre&gt;</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>NAME</name>
+          <description></description>
+          <defaultValue></defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>HOSTNAME</name>
+          <description></description>
+          <defaultValue></defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>PORT</name>
+          <description></description>
+          <defaultValue>22</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>USERNAME</name>
+          <description></description>
+          <defaultValue>jenkins</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>KEY_PATH</name>
+          <description></description>
+          <defaultValue>/root/.ssh/id_rsa</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>REMOTE_DIR</name>
+          <description></description>
+          <defaultValue>/home/jenkins</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+    <hudson.plugins.throttleconcurrents.ThrottleJobProperty plugin="throttle-concurrents@2.0.1">
+      <maxConcurrentPerNode>0</maxConcurrentPerNode>
+      <maxConcurrentTotal>0</maxConcurrentTotal>
+      <categories class="java.util.concurrent.CopyOnWriteArrayList"/>
+      <throttleEnabled>false</throttleEnabled>
+      <throttleOption>project</throttleOption>
+      <limitOneJobWithMatchingParams>false</limitOneJobWithMatchingParams>
+      <paramsToUseForLimit></paramsToUseForLimit>
+    </hudson.plugins.throttleconcurrents.ThrottleJobProperty>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.plugins.groovy.SystemGroovy plugin="groovy@2.1">
+      <source class="hudson.plugins.groovy.StringSystemScriptSource">
+        <script plugin="script-security@1.51">
+          <script>import jenkins.model.*;
+import jenkins.plugins.publish_over_ssh.*;
+
+/*
+println &quot;~~~~~~~~~~~~~&quot;;
+// println build.buildVariables;
+println build.buildVariableResolver.resolve(&apos;NAME&apos;);
+println build.buildVariableResolver.resolve(&apos;HOSTNAME&apos;);
+println build.buildVariableResolver.resolve(&apos;PORT&apos;);
+println build.buildVariableResolver.resolve(&apos;USERNAME&apos;);
+println build.buildVariableResolver.resolve(&apos;KEY_PATH&apos;);
+println build.buildVariableResolver.resolve(&apos;REMOTE_DIR&apos;);
+println &quot;~~~~~~~~~~~~~&quot;;
+*/
+
+def name = build.buildVariableResolver.resolve(&apos;NAME&apos;);
+def hostname = build.buildVariableResolver.resolve(&apos;HOSTNAME&apos;);
+def port = build.buildVariableResolver.resolve(&apos;PORT&apos;);
+port = port.isInteger() ? port.toInteger() : 22;
+def username = build.buildVariableResolver.resolve(&apos;USERNAME&apos;);
+def keyPath = build.buildVariableResolver.resolve(&apos;KEY_PATH&apos;);
+def remoteDir = build.buildVariableResolver.resolve(&apos;REMOTE_DIR&apos;);
+
+def jenkins = Jenkins.instance;
+jenkins.getDescriptorByType(BapSshPublisherPlugin.Descriptor.class).with { plugin -&gt;
+  def sshHostConfig = plugin.getConfiguration(name);
+  if( sshHostConfig != null ){
+    println &quot;Deleting SSH server:&quot; + sshHostConfig.name
+  	plugin.removeHostConfiguration(sshHostConfig.name);
+  }
+  
+  sshHostConfig = new BapSshHostConfiguration();
+  sshHostConfig.name=name;
+  sshHostConfig.hostname=hostname;
+  sshHostConfig.port=port;
+  sshHostConfig.username=username;
+  sshHostConfig.keyInfo.keyPath=keyPath;
+  sshHostConfig.remoteRootDir=remoteDir;
+  sshHostConfig.timeout=1800000;
+  sshHostConfig.overrideKey=true;
+  sshHostConfig.commonConfig = new BapSshCommonConfiguration(null,null,null,false);
+  
+  println &quot;Adding SSH server:&quot; + sshHostConfig.name
+  plugin.addHostConfiguration(sshHostConfig);
+  plugin.save();
+}
+jenkins.save();</script>
+          <sandbox>false</sandbox>
+        </script>
+      </source>
+    </hudson.plugins.groovy.SystemGroovy>
+  </builders>
+  <publishers/>
+  <buildWrappers/>
+</project>

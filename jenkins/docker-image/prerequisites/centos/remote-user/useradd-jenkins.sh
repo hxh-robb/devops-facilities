@@ -8,7 +8,7 @@ jenkins_dot_ssh(){
   mkdir -p /home/jenkins/.ssh
   chmod 700 /home/jenkins/.ssh
 
-  cp /root/jenkins.id_rsa.pub /home/jenkins/.ssh/authorized_keys
+  cat /root/jenkins.id_rsa.pub >> /home/jenkins/.ssh/authorized_keys
   chmod 600 /home/jenkins/.ssh/authorized_keys
 
   cp /root/jenkins.ssh.config /home/jenkins/.ssh/config

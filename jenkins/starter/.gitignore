@@ -11,3 +11,5 @@
 .docker/jobs/prod_*
 .docker/jobs/*/*
 !.docker/jobs/*/config.xml
+!.docker/config.xml
+!.docker/scriptApproval.xml

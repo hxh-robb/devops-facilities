@@ -29,7 +29,7 @@ fi
 cmd=$(type -t /usr/local/bin/docker-compose)
 if [ -z "$cmd" ]; then
   echo '========== Installing docker-compose =========='
-  cp prereq/docker-compose /usr/local/bin/docker-compose
+  cp prereq/centos/docker/docker-compose /usr/local/bin/docker-compose
   chmod +x /usr/local/bin/docker-compose
   echo '======= docker-compose is now installed ======='
 else
